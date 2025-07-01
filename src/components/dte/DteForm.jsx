@@ -1,283 +1,398 @@
-// src/components/dte/DteForm.jsx
-import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { SCHEMAS } from "../schemas/schemas";
-import { useAuth } from "../context/AuthContext";
-import FacturaPreview from "./FacturaPreview";
-import { useReactToPrint } from "react-to-print";
+import { useState, useEffect } from 'react';
+import { Plus, Minus, Trash2 } from 'lucide-react';
 
-// Render recursivo, inputs de emisor readonly
-function RenderSchema({ schema, value, setValue, path = "" }) {
-  const isEmisor = path.startsWith("emisor");
-
-  if (!schema || !schema.properties) return null;
-
-  const simpleFields = [];
-  const complexFields = [];
-
-  Object.entries(schema.properties).forEach(([key, prop]) => {
-    const fullPath = path ? `${path}.${key}` : key;
-    const val = value?.[key];
-
-    if (prop.type === "object" || prop.type === "array") {
-      complexFields.push(
-        <div key={fullPath} className="col-span-2 mb-6 p-4 rounded bg-zinc-700">
-          <div className="font-bold mb-3 text-blue-300 uppercase tracking-wide">{prop.title || key}</div>
-          {prop.type === "object" ? (
-            <RenderSchema
-              schema={prop}
-              value={val || {}}
-              setValue={obj =>
-                setValue({
-                  ...value,
-                  [key]: obj,
-                })
-              }
-              path={fullPath}
-            />
-          ) : (
-            // Array rendering
-            <div>
-              <button
-                type="button"
-                className="mb-2 py-1 px-3 bg-blue-500 text-white rounded"
-                onClick={() => setValue({ ...value, [key]: [...(val || []), {}] })}
-              >
-                + Agregar {prop.items?.title || "ítem"}
-              </button>
-              <div className="flex flex-col gap-2">
-                {(val || []).map((item, idx) => (
-                  <div key={idx} className="mb-2 border rounded p-2 bg-zinc-800">
-                    <RenderSchema
-                      schema={prop.items}
-                      value={item}
-                      setValue={itemVal =>
-                        setValue({
-                          ...value,
-                          [key]: val.map((v, i) => (i === idx ? itemVal : v)),
-                        })
-                      }
-                      path={`${fullPath}[${idx}]`}
-                    />
-                    <button
-                      type="button"
-                      className="mt-2 py-1 px-3 bg-red-500 text-white rounded"
-                      onClick={() =>
-                        setValue({
-                          ...value,
-                          [key]: val.filter((_, i) => i !== idx),
-                        })
-                      }
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      simpleFields.push(
-        <div key={fullPath} className="mb-4 flex flex-col">
-          <label className="text-white font-semibold mb-1">{prop.title || key}</label>
-          <input
-            className="p-2 rounded border border-zinc-500 bg-zinc-900 text-white w-full focus:outline-none focus:border-blue-500 transition-all"
-            type={prop.type === "number" ? "number" : "text"}
-            value={val || ""}
-            onChange={e => setValue({ ...value, [key]: e.target.value })}
-            required={schema.required?.includes(key)}
-            autoComplete="off"
-            readOnly={isEmisor}
-            tabIndex={isEmisor ? -1 : 0}
-            style={isEmisor ? { background: "#232334", opacity: 0.85 } : {}}
-          />
-        </div>
-      );
+const DteForm = ({ onDataChange, initialData }) => {
+  const [formData, setFormData] = useState({
+    identificacion: {
+      version: 1,
+      ambiente: "01", // Pruebas
+      tipoDte: "01", // Factura
+      numeroControl: "DTE-01-00000001-000000000000001",
+      codigoGeneracion: "",
+      tipoModelo: "1",
+      tipoOperacion: "1",
+      fecEmi: new Date().toISOString().split('T')[0],
+      horEmi: new Date().toTimeString().split(' ')[0],
+      tipoMoneda: "USD"
+    },
+    emisor: {
+      nit: "12345678901234",
+      nrc: "123456-7",
+      nombre: "EMPRESA DE PRUEBA S.A. DE C.V.",
+      codActividad: "62010",
+      descActividad: "Programación informática",
+      direccion: {
+        departamento: "06",
+        municipio: "01",
+        complemento: "Colonia Test, Calle Test #123"
+      },
+      telefono: "22334455",
+      correo: "test@empresa.com"
+    },
+    receptor: {
+      nombre: "",
+      numDocumento: "",
+      tipoDocumento: "13",
+      direccion: {
+        departamento: "05",
+        municipio: "02",
+        complemento: ""
+      }
+    },
+    cuerpoDocumento: [
+      {
+        numItem: 1,
+        tipoItem: 2,
+        descripcion: "",
+        cantidad: 1,
+        uniMedida: 16, // Servicio
+        precioUni: 0,
+        montoDescu: 0,
+        ventaNoSuj: 0,
+        ventaExenta: 0,
+        ventaGravada: 0
+      }
+    ],
+    resumen: {
+      totalNoSuj: 0,
+      totalExenta: 0,
+      totalGravada: 0,
+      subTotalVentas: 0,
+      descuNoSuj: 0,
+      descuExenta: 0,
+      descuGravada: 0,
+      porcentajeDescuento: 0,
+      totalDescu: 0,
+      subTotal: 0,
+      ivaPerci: 0,
+      ivaRete: 0,
+      reteRenta: 0,
+      montoTotalOperacion: 0,
+      totalNoGravado: 0,
+      totalPagar: 0,
+      condicionOperacion: 1, // Contado
+      pagos: [
+        {
+          codigo: "01", // Billetes y monedas
+          montoPago: 0,
+          referencia: null,
+          plazo: null,
+          periodo: null
+        }
+      ]
     }
   });
 
-  return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">{simpleFields}</div>
-      {complexFields}
-    </div>
-  );
-}
-
-export default function DteForm() {
-  const { tipo } = useParams();
-  const schema = SCHEMAS[tipo];
-  const [formData, setFormData] = useState({});
-  const [jsonOutput, setJsonOutput] = useState("");
-  const [activeTab, setActiveTab] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
-  const facturaRef = useRef();
-  const { user } = useAuth() || {};
-
-  // Autollenado dinámico de "emisor"
+  // Generar UUID al cargar el componente
   useEffect(() => {
-    if (
-      schema &&
-      schema.properties &&
-      schema.properties["emisor"] &&
-      user &&
-      !formData.emisor
-    ) {
-      const emisorFields = Object.keys(schema.properties["emisor"].properties || {});
-      const emisorAutofill = {};
-      emisorFields.forEach(field => {
-        if (user[field] !== undefined) {
-          emisorAutofill[field] = user[field];
-        } else {
-          emisorAutofill[field] = "";
-        }
+    if (!formData.identificacion.codigoGeneracion) {
+      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16).toUpperCase();
       });
-
+      
       setFormData(prev => ({
         ...prev,
-        emisor: emisorAutofill,
+        identificacion: {
+          ...prev.identificacion,
+          codigoGeneracion: uuid
+        }
       }));
     }
-    // eslint-disable-next-line
-  }, [schema, user]);
+  }, []);
 
-  // Manejo de tabs
-  const sectionKeys = Object.keys(schema?.properties || {});
+  // Notificar cambios al componente padre
   useEffect(() => {
-    if (!activeTab && sectionKeys.length > 0) setActiveTab(sectionKeys[0]);
-    // eslint-disable-next-line
-  }, [schema]);
+    if (onDataChange) {
+      onDataChange(formData);
+    }
+  }, [formData, onDataChange]);
 
-  const handleTabClick = key => setActiveTab(key);
-
-  const handleSectionChange = (sectionKey, val) => {
+  const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
-      [sectionKey]: val,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
     }));
   };
 
-  const handleGenerateJSON = () => {
-    setJsonOutput(JSON.stringify(formData, null, 2));
+  const handleItemChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      cuerpoDocumento: prev.cuerpoDocumento.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
   };
 
-  // Para imprimir factura
-  const handlePrint = useReactToPrint({
-    content: () => facturaRef.current,
-  });
+  // ✨ NUEVAS FUNCIONES PARA MÚLTIPLES PRODUCTOS
+  const addNewItem = () => {
+    const newItem = {
+      numItem: formData.cuerpoDocumento.length + 1,
+      tipoItem: 2,
+      descripcion: "",
+      cantidad: 1,
+      uniMedida: 16, // Servicio
+      precioUni: 0,
+      montoDescu: 0,
+      ventaNoSuj: 0,
+      ventaExenta: 0,
+      ventaGravada: 0
+    };
 
-  // Obtén datos para el preview (ajusta si tu schema es diferente)
-  const emisor = formData.emisor;
-  const receptor = formData.receptor;
-  const items = formData.cuerpoDocumento?.detalle || [];
-  const resumen = formData.resumen;
-  const infoAdicional = formData.extension?.infoAdicional || "";
+    setFormData(prev => ({
+      ...prev,
+      cuerpoDocumento: [...prev.cuerpoDocumento, newItem]
+    }));
+  };
+
+  const removeItem = (index) => {
+    if (formData.cuerpoDocumento.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        cuerpoDocumento: prev.cuerpoDocumento
+          .filter((_, i) => i !== index)
+          .map((item, i) => ({ ...item, numItem: i + 1 })) // Renumerar items
+      }));
+    }
+  };
+
+  const duplicateItem = (index) => {
+    const itemToDuplicate = { ...formData.cuerpoDocumento[index] };
+    itemToDuplicate.numItem = formData.cuerpoDocumento.length + 1;
+    
+    setFormData(prev => ({
+      ...prev,
+      cuerpoDocumento: [...prev.cuerpoDocumento, itemToDuplicate]
+    }));
+  };
+
+  // Calcular total general
+  const getTotalGeneral = () => {
+    return formData.cuerpoDocumento.reduce((total, item) => {
+      return total + ((item.cantidad * item.precioUni) - item.montoDescu);
+    }, 0);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-900 relative">
-      <div className="bg-zinc-800 rounded-2xl max-w-6xl w-full shadow-2xl flex"
-           style={{ minHeight: 750, minWidth: 1240 }}>
-        {/* Tabs verticales */}
-        <div className="flex flex-col w-64 p-8 border-r border-zinc-700">
-          <h2 className="text-white text-lg font-bold mb-6 text-center tracking-wide">
-            {schema?.title || "DTE"}
-          </h2>
-          <div className="flex flex-col gap-2">
-            {sectionKeys.map(key => (
-              <button
-                key={key}
-                onClick={() => handleTabClick(key)}
-                className={`py-2 px-3 rounded-lg font-bold text-left transition-colors
-                  ${activeTab === key ? "bg-blue-600 text-white shadow" : "bg-zinc-700 text-zinc-200 hover:bg-blue-800"}`}
-              >
-                {schema.properties[key]?.title || key}
-              </button>
-            ))}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+        Formulario de Documento Tributario Electrónico
+      </h2>
+
+      {/* Información del Receptor */}
+      <div className="mb-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Información del Receptor</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Receptor *
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.nombre}
+              onChange={(e) => handleInputChange('receptor', 'nombre', e.target.value)}
+              placeholder="Nombre completo o razón social"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Número de Documento
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.numDocumento}
+              onChange={(e) => handleInputChange('receptor', 'numDocumento', e.target.value)}
+              placeholder="DUI, NIT, Pasaporte, etc."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
-        {/* Formulario a la derecha */}
-        <div
-          className="flex-1 p-10 flex flex-col justify-between relative"
-          style={{
-            minHeight: "700px",
-            minWidth: "800px",
-            maxHeight: "900px",
-            maxWidth: "1100px",
-            overflowY: "auto",
-            transition: "min-height 0.2s, max-height 0.2s, min-width 0.2s, max-width 0.2s"
-          }}
-        >
-          {activeTab && schema.properties[activeTab] && (
-            Object.keys(schema.properties[activeTab].properties || {}).length > 0 ? (
-              <RenderSchema
-                schema={schema.properties[activeTab]}
-                value={formData[activeTab] || {}}
-                setValue={val => handleSectionChange(activeTab, val)}
-                path={activeTab}
-              />
-            ) : (
-              <div className="text-zinc-400 py-12 text-center">No hay campos en esta sección.</div>
-            )
-          )}
-          {jsonOutput && (
-            <pre className="mt-8 bg-zinc-900 p-4 rounded text-green-300 text-xs overflow-x-auto">
-              {jsonOutput}
-            </pre>
-          )}
+      </div>
+
+      {/* Detalle de Items - MEJORADO */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">
+            Detalle de Productos/Servicios ({formData.cuerpoDocumento.length})
+          </h3>
+          <button
+            onClick={addNewItem}
+            className="w-8 h-8 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center"
+            title="Agregar producto"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+
+        {formData.cuerpoDocumento.map((item, index) => (
+          <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4 relative">
+            {/* Header del ítem */}
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium text-gray-900">
+                Ítem #{item.numItem}
+              </h4>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => duplicateItem(index)}
+                  className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                  title="Duplicar ítem"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                {formData.cuerpoDocumento.length > 1 && (
+                  <button
+                    onClick={() => removeItem(index)}
+                    className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                    title="Eliminar ítem"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción *
+                </label>
+                <input
+                  type="text"
+                  value={item.descripcion}
+                  onChange={(e) => handleItemChange(index, 'descripcion', e.target.value)}
+                  placeholder="Descripción del producto o servicio"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cantidad *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={item.cantidad}
+                  onChange={(e) => handleItemChange(index, 'cantidad', parseFloat(e.target.value) || 1)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Precio Unitario *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.precioUni}
+                  onChange={(e) => handleItemChange(index, 'precioUni', parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subtotal
+                </label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 font-medium">
+                  ${((item.cantidad * item.precioUni) - item.montoDescu).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* Fila adicional para descuento */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descuento
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.montoDescu}
+                  onChange={(e) => handleItemChange(index, 'montoDescu', parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="md:col-span-3 flex items-end">
+                <div className="text-sm text-gray-600">
+                  <strong>Cálculo:</strong> {item.cantidad} × ${item.precioUni.toFixed(2)} - ${item.montoDescu.toFixed(2)} = ${((item.cantidad * item.precioUni) - item.montoDescu).toFixed(2)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Resumen de ítems */}
+        <div className="bg-gray-50 rounded-lg p-4 mt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">
+              Total de {formData.cuerpoDocumento.length} ítem(s):
+            </span>
+            <span className="text-lg font-bold text-gray-900">
+              ${getTotalGeneral().toFixed(2)}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Los impuestos se calcularán automáticamente en el siguiente paso
+          </p>
         </div>
       </div>
-      {/* Botones de acción fuera del form */}
-      <div className="flex gap-4 mt-8 justify-end w-full max-w-6xl">
-        <button
-          onClick={() => setShowPreview(true)}
-          className="py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xl text-lg tracking-wide"
-          type="button"
-        >
-          Ver factura / Imprimir
-        </button>
-        <button
-          onClick={handleGenerateJSON}
-          className="py-3 px-8 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-xl shadow-xl text-lg tracking-wide"
-          type="button"
-        >
-          Generar JSON
-        </button>
+
+      {/* Información del Documento */}
+      <div className="mb-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Información del Documento</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Código de Generación
+            </label>
+            <input
+              type="text"
+              value={formData.identificacion.codigoGeneracion}
+              readOnly
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 font-mono text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha de Emisión
+            </label>
+            <input
+              type="date"
+              value={formData.identificacion.fecEmi}
+              onChange={(e) => handleInputChange('identificacion', 'fecEmi', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Modal para vista previa */}
-      {showPreview && (
-  <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start justify-center overflow-auto">
-    <div className="relative min-w-[820px] min-h-[1100px] max-h-full flex flex-col justify-start items-center">
-      {/* Botón cerrar arriba a la derecha */}
-      <button
-        onClick={() => setShowPreview(false)}
-        className="fixed top-6 right-8 z-50 py-2 px-4 bg-red-500 text-white rounded shadow print:hidden"
-      >
-        Cerrar
-      </button>
-      {/* Factura centrada */}
-      <FacturaPreview
-        ref={facturaRef}
-        emisor={emisor}
-        receptor={receptor}
-        items={items}
-        resumen={resumen}
-        infoAdicional={infoAdicional}
-      />
-      <div className="flex gap-4 mt-6 justify-end print:hidden">
-        <button
-          className="py-2 px-4 bg-green-600 text-white rounded"
-          onClick={handlePrint}
-        >
-          Imprimir
-        </button>
+      {/* Información de muestra */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-semibold text-blue-900 mb-2">Información</h4>
+        <ul className="text-sm text-blue-800 space-y-1">
+          <li>• Use el botón "Agregar Producto" para incluir múltiples ítems</li>
+          <li>• Puede duplicar productos similares con el ícono +</li>
+          <li>• Los cálculos de impuestos se realizarán automáticamente en el siguiente paso</li>
+          <li>• El código de generación se genera automáticamente</li>
+        </ul>
       </div>
-    </div>
-  </div>
-)}
-
     </div>
   );
-}
+};
+
+export default DteForm;

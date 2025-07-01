@@ -2,57 +2,86 @@
 Path                       
 ----                       
 G:\PROJECTS\dte-facturacion
+├── .vercel
+│   ├── project.json
+│   └── README.txt
 ├── public
+│   ├── logo.png
 │   └── vite.svg
 ├── src
 │   ├── assets
 │   │   └── react.svg
+│   ├── calculadora
+│   │   ├── SignatureQRManager.jsx
+│   │   └── TaxCalculator.jsx
 │   ├── components
 │   │   ├── api
 │   │   │   └── fakeApi.js
 │   │   ├── auth
+│   │   │   ├── AuthContext.jsx
 │   │   │   └── LoginForm.jsx
 │   │   ├── context
 │   │   │   └── AuthContext.jsx
+│   │   ├── data
+│   │   │   └── catalogs.js
 │   │   ├── dte
 │   │   │   ├── DteContingency.jsx
 │   │   │   ├── DteForm.jsx
 │   │   │   ├── DteHistory.jsx
 │   │   │   ├── DteInvalidation.jsx
-│   │   │   └── DteTypeSelector.jsx
+│   │   │   ├── DTEManager.jsx
+│   │   │   ├── DteTypeSelector.jsx
+│   │   │   ├── FacturaPreview.jsx
+│   │   │   └── ReceptorForm.jsx
 │   │   ├── hooks
 │   │   │   ├── useAuth.js
-│   │   │   └── useDteSchema.js
+│   │   │   ├── useDteSchema.js
+│   │   │   ├── useQRGenerator.js
+│   │   │   └── useTaxCalculations.js
 │   │   ├── layout
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── ProtectedRoute.jsx
 │   │   │   └── Sidebar.jsx
-│   │   └── schemas
-│   │       ├── anulacion-schema-v2.json
-│   │       ├── contingencia-schema-v3.json
-│   │       ├── creditoFiscal.schema.json
-│   │       ├── facturaElectronica.schema.json
-│   │       ├── fe-ccf-v3.json
-│   │       ├── fe-cd-v1.json
-│   │       ├── fe-cl-v1.json
-│   │       ├── fe-cr-v1.json
-│   │       ├── fe-dcl-v1.json
-│   │       ├── fe-fc-v1.json
-│   │       ├── fe-fex-v1.json
-│   │       ├── fe-fse-v1.json
-│   │       ├── fe-nc-v3.json
-│   │       ├── fe-nd-v3.json
-│   │       └── fe-nr-v3.json
+│   │   ├── schemas
+│   │   │   ├── anulacion-schema-v2.json
+│   │   │   ├── contingencia-schema-v3.json
+│   │   │   ├── creditoFiscal.schema.json
+│   │   │   ├── facturaElectronica.schema.json
+│   │   │   ├── fe-ccf-v3.json
+│   │   │   ├── fe-cd-v1.json
+│   │   │   ├── fe-cl-v1.json
+│   │   │   ├── fe-cr-v1.json
+│   │   │   ├── fe-dcl-v1.json
+│   │   │   ├── fe-fc-v1.json
+│   │   │   ├── fe-fex-v1.json
+│   │   │   ├── fe-fse-v1.json
+│   │   │   ├── fe-nc-v3.json
+│   │   │   ├── fe-nd-v3.json
+│   │   │   ├── fe-nr-v3.json
+│   │   │   └── schemas.js
+│   │   ├── services
+│   │   │   ├── apiService.js
+│   │   │   ├── digitalSignature.js
+│   │   │   └── schemaValidator.js
+│   │   └── vercel.json
+│   ├── config
+│   │   └── index.js
+│   ├── utils
+│   │   └── index.js
 │   ├── App.css
 │   ├── App.jsx
+│   ├── fakeReceivers.js
 │   ├── index.css
 │   └── main.jsx
+├── .env
 ├── .gitignore
 ├── eslint.config.js
 ├── index.html
 ├── package-lock.json
 ├── package.json
+├── postcss.config.js
 ├── README.md
+├── tailwind.config.js
 ├── tree-estructura.txt
 └── vite.config.js
 

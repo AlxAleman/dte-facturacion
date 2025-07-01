@@ -5,6 +5,7 @@ import DteForm from "./components/dte/DteForm";
 import DteHistory from "./components/dte/DteHistory";
 import DteContingency from "./components/dte/DteContingency";
 import DteInvalidation from "./components/dte/DteInvalidation";
+import DTEManager from "./components/dte/DTEManager";  // ← Nuevo sistema profesional
 
 export default function App() {
   // Mock autenticación simple (luego usarás AuthContext y hook real)
@@ -13,13 +14,42 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Ruta de Login - Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
+        
+        {/* Ruta principal - Selector de tipo de DTE */}
         <Route
           path="/"
           element={
             isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
           }
         />
+        
+        {/* ================================ */}
+        {/* SISTEMA PROFESIONAL - NUEVO     */}
+        {/* ================================ */}
+        <Route
+          path="/dte/nuevo"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/dte/profesional"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/sistema-profesional"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* ================================ */}
+        {/* SISTEMA TRADICIONAL - EXISTENTE */}
+        {/* ================================ */}
         <Route
           path="/emitir/:tipo"
           element={
@@ -44,8 +74,175 @@ export default function App() {
             isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
           }
         />
-        {/* Fallback: cualquier ruta no encontrada */}
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
+        
+        {/* ================================ */}
+        {/* RUTAS ADICIONALES RECOMENDADAS  */}
+        {/* ================================ */}
+        
+        {/* Rutas alternativas para el historial */}
+        <Route
+          path="/dte/historial"
+          element={
+            isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* Rutas alternativas para contingencia */}
+        <Route
+          path="/dte/contingencia"
+          element={
+            isAuthenticated ? <DteContingency /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* Rutas alternativas para invalidación */}
+        <Route
+          path="/dte/invalidacion"
+          element={
+            isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* ================================ */}
+        {/* RUTAS DE DESARROLLO/TESTING      */}
+        {/* ================================ */}
+        
+        {/* Ruta para testing del sistema profesional */}
+        <Route
+          path="/test/profesional"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* Ruta para comparar ambos sistemas */}
+        <Route
+          path="/comparar"
+          element={
+            isAuthenticated ? (
+              <div className="min-h-screen bg-gray-100 p-6">
+                <div className="max-w-6xl mx-auto">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                    Comparación de Sistemas
+                  </h1>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                      <h2 className="text-xl font-semibold text-blue-600 mb-4">
+                        Sistema Profesional
+                      </h2>
+                      <DTEManager />
+                    </div>
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                      <h2 className="text-xl font-semibold text-green-600 mb-4">
+                        Sistema Tradicional
+                      </h2>
+                      <DteTypeSelector />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        
+        {/* ================================ */}
+        {/* RUTAS DE ACCESO DIRECTO          */}
+        {/* ================================ */}
+        
+        {/* Acceso directo por tipo de documento */}
+        <Route
+          path="/factura"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/ccf"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/nota-credito"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/nota-debito"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        
+        {/* ================================ */}
+        {/* REDIRECTS Y ALIASES              */}
+        {/* ================================ */}
+        
+        {/* Redirects del sistema anterior al nuevo */}
+        <Route
+          path="/crear-dte"
+          element={<Navigate to="/dte/nuevo" replace />}
+        />
+        <Route
+          path="/nuevo-dte"
+          element={<Navigate to="/dte/nuevo" replace />}
+        />
+        <Route
+          path="/emitir"
+          element={<Navigate to="/" replace />}
+        />
+        
+        {/* ================================ */}
+        {/* FALLBACK - MANEJO DE ERRORES     */}
+        {/* ================================ */}
+        
+        {/* Página 404 personalizada para usuarios autenticados */}
+        <Route
+          path="/404"
+          element={
+            isAuthenticated ? (
+              <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto text-center">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+                  <p className="text-gray-600 mb-6">Página no encontrada</p>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Ir al Inicio
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/dte/nuevo'}
+                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      Crear Nuevo DTE
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/historial'}
+                      className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      Ver Historial
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        
+        {/* Fallback final: cualquier ruta no encontrada */}
+        <Route 
+          path="*" 
+          element={
+            isAuthenticated ? <Navigate to="/404" replace /> : <Navigate to="/login" replace />
+          } 
+        />
       </Routes>
     </Router>
   );
