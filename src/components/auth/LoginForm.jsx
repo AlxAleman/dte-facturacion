@@ -1,62 +1,74 @@
-import { useState } from "react";
+// src/components/auth/LoginForm.jsx
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock: usuario demo / demo123 (puedes cambiarlo)
-    if (user === "demo" && pass === "demo123") {
-      localStorage.setItem("token", "mock-token-123");
+    setError("");
+    setLoading(true);
+    try {
+      await login(username, password);
       navigate("/");
-    } else {
+    } catch (err) {
       setError("Usuario o contraseña incorrectos");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex", justifyContent: "center", alignItems: "center",
-      background: "#18181b"
-    }}>
-      <form onSubmit={handleSubmit} style={{
-        background: "#23232b",
-        borderRadius: 8,
-        padding: 32,
-        boxShadow: "0 0 32px #000a",
-        display: "flex", flexDirection: "column", gap: 16, minWidth: 300
-      }}>
-        <h2 style={{ color: "#fff", marginBottom: 8 }}>Iniciar Sesión</h2>
-        <input
-          type="text"
-          placeholder="Usuario"
-          value={user}
-          onChange={e => setUser(e.target.value)}
-          style={{ padding: 10, borderRadius: 4, border: "1px solid #444" }}
-          autoFocus
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={pass}
-          onChange={e => setPass(e.target.value)}
-          style={{ padding: 10, borderRadius: 4, border: "1px solid #444" }}
-        />
-        {error && <span style={{ color: "red", fontSize: 14 }}>{error}</span>}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded shadow-md w-full max-w-sm"
+        autoComplete="off"
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center">Iniciar sesión</h2>
+        <label className="block mb-2">
+          Usuario
+          <input
+            type="text"
+            className="w-full border p-2 rounded mt-1"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoFocus
+          />
+        </label>
+        <label className="block mb-4">
+          Contraseña
+          <input
+            type="password"
+            className="w-full border p-2 rounded mt-1"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {error && (
+          <div className="mb-4 text-red-600 border border-red-200 bg-red-50 p-2 rounded text-sm text-center animate-shake">
+            {error}
+          </div>
+        )}
         <button
           type="submit"
-          style={{
-            padding: 10, borderRadius: 4, border: "none",
-            background: "#3b82f6", color: "#fff", fontWeight: "bold"
-          }}>
-          Entrar
+          className="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition-colors"
+          disabled={loading}
+        >
+          {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
+      <div className="mt-4 text-gray-400 text-xs">
+        Usuario: <b>demo</b> <br />
+        Contraseña: <b>demo123</b>
+      </div>
     </div>
   );
 }
