@@ -6,6 +6,10 @@ G:\PROJECTS\dte-facturacion
 │   ├── project.json
 │   └── README.txt
 ├── public
+│   ├── certificates
+│   │   ├── firma-digital.pfx
+│   │   ├── test-cert.cer
+│   │   └── test-key.key
 │   ├── logo.png
 │   └── vite.svg
 ├── src

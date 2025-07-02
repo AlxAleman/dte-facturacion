@@ -6,6 +6,11 @@ import DteHistory from "./components/dte/DteHistory";
 import DteContingency from "./components/dte/DteContingency";
 import DteInvalidation from "./components/dte/DteInvalidation";
 import DTEManager from "./components/dte/DTEManager";  // ← Sistema profesional
+import DteTestSuite from "./components/dte/DteTestSuite";
+import DTESchemaAnalyzer from "./components/dte/DTESchemaAnalyzer";
+
+
+
 
 export default function App() {
   // Mock autenticación simple
@@ -17,17 +22,17 @@ export default function App() {
       <Routes>
         {/* Ruta de Login - Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
-        
+
         {/* ================================ */}
         {/* RUTA PRINCIPAL - SISTEMA PROFESIONAL */}
         {/* ================================ */}
         <Route
-  path="/"
-  element={
-    isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
-  }
-/>
-        
+          path="/"
+          element={
+            isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
+          }
+        />
+
         {/* ================================ */}
         {/* SISTEMA PROFESIONAL - RUTAS PRINCIPALES */}
         {/* ================================ */}
@@ -49,7 +54,7 @@ export default function App() {
             isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
           }
         />
-        
+
         {/* ================================ */}
         {/* SISTEMA TRADICIONAL - PARA CASOS ESPECIALES */}
         {/* ================================ */}
@@ -71,7 +76,7 @@ export default function App() {
             isAuthenticated ? <DteForm /> : <Navigate to="/login" replace />
           }
         />
-        
+
         {/* ================================ */}
         {/* RUTAS DE GESTIÓN */}
         {/* ================================ */}
@@ -111,7 +116,7 @@ export default function App() {
             isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
           }
         />
-        
+
         {/* ================================ */}
         {/* ACCESOS DIRECTOS POR TIPO */}
         {/* ================================ */}
@@ -139,7 +144,7 @@ export default function App() {
             isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
           }
         />
-        
+
         {/* ================================ */}
         {/* RUTAS DE DESARROLLO */}
         {/* ================================ */}
@@ -149,7 +154,7 @@ export default function App() {
             isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
           }
         />
-        
+
         {/* Comparación de sistemas */}
         <Route
           path="/comparar"
@@ -181,7 +186,21 @@ export default function App() {
             )
           }
         />
-        
+        {/* ================================ */}
+        {/* REDIRECTS PRUEBAS */}
+        {/* ================================ */}
+        <Route
+          path="/test"
+          element={isAuthenticated ? <DteTestSuite /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/analizador"
+          element={isAuthenticated ? <DTESchemaAnalyzer /> : <Navigate to="/login" replace />}
+        />
+
+
+
         {/* ================================ */}
         {/* REDIRECTS ÚTILES */}
         {/* ================================ */}
@@ -197,7 +216,7 @@ export default function App() {
           path="/emitir"
           element={<Navigate to="/tradicional" replace />}
         />
-        
+
         {/* ================================ */}
         {/* PÁGINA 404 */}
         {/* ================================ */}
@@ -236,13 +255,13 @@ export default function App() {
             )
           }
         />
-        
+
         {/* Fallback final */}
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
             isAuthenticated ? <Navigate to="/404" replace /> : <Navigate to="/login" replace />
-          } 
+          }
         />
       </Routes>
     </Router>

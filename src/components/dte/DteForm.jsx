@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Trash2 } from 'lucide-react';
+import { Plus, Minus, Trash2, FileText } from 'lucide-react';
+import { CATALOGS, getCatalogValue } from '../data/catalogs';
 
 // Función helper para generar UUID
 function generateUUID() {
@@ -15,9 +16,9 @@ const DteForm = ({ onDataChange, initialData }) => {
     identificacion: {
       version: 1,
       ambiente: "01", // Pruebas
-      tipoDte: "01", // Factura
+      tipoDte: "01", // Factura - Default
       numeroControl: "DTE-01-00000001-000000000000001",
-      codigoGeneracion: generateUUID(), // ← Generar directamente aquí
+      codigoGeneracion: generateUUID(),
       tipoModelo: "1",
       tipoOperacion: "1",
       fecEmi: new Date().toISOString().split('T')[0],
@@ -130,6 +131,21 @@ const DteForm = ({ onDataChange, initialData }) => {
     }));
   };
 
+  // 🆕 Manejar cambio de tipo DTE
+  const handleTipoDteChange = (tipoDte) => {
+    // Actualizar el número de control según el tipo
+    const numeroControl = `DTE-${tipoDte}-00000001-000000000000001`;
+    
+    setFormData(prev => ({
+      ...prev,
+      identificacion: {
+        ...prev.identificacion,
+        tipoDte: tipoDte,
+        numeroControl: numeroControl
+      }
+    }));
+  };
+
   const handleItemChange = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -188,11 +204,97 @@ const DteForm = ({ onDataChange, initialData }) => {
     }, 0);
   };
 
+  // 🆕 Obtener información del tipo DTE seleccionado
+  const getTipoDteInfo = () => {
+    const tipoInfo = CATALOGS.TIPOS_DTE.find(tipo => tipo.codigo === formData.identificacion.tipoDte);
+    return tipoInfo || { valor: "Tipo no encontrado", esquema: "unknown" };
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
         Formulario de Documento Tributario Electrónico
       </h2>
+
+      {/* 🆕 SELECTOR DE TIPO DTE - NUEVO */}
+      <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-blue-600" />
+          Tipo de Documento Tributario
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Seleccionar Tipo de DTE *
+            </label>
+            <select
+              value={formData.identificacion.tipoDte}
+              onChange={(e) => handleTipoDteChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              {CATALOGS.TIPOS_DTE.map(tipo => (
+                <option key={tipo.codigo} value={tipo.codigo}>
+                  {tipo.codigo} - {tipo.valor}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <div className="bg-white border border-gray-200 rounded-md p-3 w-full">
+              <div className="text-sm text-gray-600">
+                <strong>Documento seleccionado:</strong>
+                <div className="text-lg font-semibold text-blue-600 mt-1">
+                  {getTipoDteInfo().valor}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Schema: {getTipoDteInfo().esquema}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Información del tipo seleccionado */}
+        <div className="mt-4 p-3 bg-white border border-gray-200 rounded-md">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Información del Tipo DTE:</h4>
+          <div className="text-xs text-gray-600 space-y-1">
+            {formData.identificacion.tipoDte === "01" && (
+              <>
+                <p>• <strong>Factura de Consumidor:</strong> Para ventas a consumidores finales</p>
+                <p>• <strong>IVA:</strong> 13% sobre operaciones gravadas</p>
+                <p>• <strong>Retención:</strong> 1% - 10% según aplique</p>
+              </>
+            )}
+            {formData.identificacion.tipoDte === "03" && (
+              <>
+                <p>• <strong>Comprobante de Crédito Fiscal:</strong> Para ventas a empresas</p>
+                <p>• <strong>IVA:</strong> 13% con derecho a crédito fiscal</p>
+                <p>• <strong>Incluye:</strong> IVA Percibido además del retenido</p>
+              </>
+            )}
+            {formData.identificacion.tipoDte === "14" && (
+              <>
+                <p>• <strong>Factura de Sujeto Excluido:</strong> Para sujetos exentos de IVA</p>
+                <p>• <strong>IVA:</strong> 0% (exento)</p>
+                <p>• <strong>Retención:</strong> No aplica</p>
+              </>
+            )}
+            {formData.identificacion.tipoDte === "11" && (
+              <>
+                <p>• <strong>Factura de Exportación:</strong> Para operaciones de exportación</p>
+                <p>• <strong>IVA:</strong> 0% (exportación)</p>
+                <p>• <strong>Monto mínimo:</strong> $100.00</p>
+              </>
+            )}
+            {!["01", "03", "14", "11"].includes(formData.identificacion.tipoDte) && (
+              <p>• Consulte la documentación oficial del MH para este tipo de documento</p>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Información del Receptor */}
       <div className="mb-8">
@@ -435,7 +537,7 @@ const DteForm = ({ onDataChange, initialData }) => {
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Los impuestos se calcularán automáticamente en el siguiente paso
+            Los impuestos se calcularán automáticamente según el tipo de DTE seleccionado
           </p>
         </div>
       </div>
@@ -457,6 +559,17 @@ const DteForm = ({ onDataChange, initialData }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Número de Control
+            </label>
+            <input
+              type="text"
+              value={formData.identificacion.numeroControl}
+              readOnly
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 font-mono text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Fecha de Emisión
             </label>
             <input
@@ -466,17 +579,25 @@ const DteForm = ({ onDataChange, initialData }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de DTE Seleccionado
+            </label>
+            <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-blue-900 font-medium">
+              {formData.identificacion.tipoDte} - {getTipoDteInfo().valor}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Información de muestra */}
+      {/* Información de muestra - ACTUALIZADA */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="text-sm font-semibold text-blue-900 mb-2">Información</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Use el botón "Agregar Producto" para incluir múltiples ítems</li>
-          <li>• Puede duplicar productos similares con el ícono +</li>
-          <li>• Los cálculos de impuestos se realizarán automáticamente en el siguiente paso</li>
-          <li>• El código de generación se genera automáticamente</li>
+          <li>• <strong>Tipo DTE:</strong> Cada tipo tiene reglas específicas de cálculo e impuestos</li>
+          <li>• <strong>Productos:</strong> Use el botón "+" para agregar múltiples ítems</li>
+          <li>• <strong>Cálculos:</strong> Los impuestos se calcularán según el tipo de documento seleccionado</li>
+          <li>• <strong>Validación:</strong> El documento será validado contra el schema oficial del MH</li>
         </ul>
       </div>
     </div>

@@ -21,7 +21,7 @@ import DteForm from './DteForm';                                    // ✅ Mismo
 import TaxCalculator from '../../calculadora/TaxCalculator';        // ✅ Tu carpeta calculadora  
 import SignatureQRManager from '../../calculadora/SignatureQRManager';
 import FacturaPreview from './FacturaPreview';                      // ✅ Nuevo import para preview
-import { useTaxCalculations } from '../hooks/useTaxCalculations';   // ✅ Tu hooks
+import { useTaxCalculations } from '../hooks/useTaxCalculations';   // ✅ Tu hooks ACTUALIZADO
 import { useQRGenerator } from '../hooks/useQRGenerator';           // ✅ Tu hooks  
 import { schemaValidator } from '../services/schemaValidator';      // ✅ Tu services
 import { apiService } from '../services/apiService';               // ✅ Tu services
@@ -40,6 +40,9 @@ const DTEManager = () => {
 
   // Referencias para preview
   const previewRef = useRef(null);
+
+  // 🆕 Hook de cálculos actualizado
+  const { getDteInfo } = useTaxCalculations();
 
   const steps = [
     { number: 1, title: 'Datos del DTE', icon: FileText },
@@ -68,16 +71,21 @@ const DTEManager = () => {
     apiService.setEnvironment(environment === 'production');
   }, [environment]);
 
-  // ...
-  useEffect(() => {
-    apiService.setEnvironment(environment === 'production');
-  }, [environment]);
-
   // Scroll al top al cambiar de paso
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeStep]);
 
+  // 🆕 Obtener tipo de DTE actual
+  const getCurrentDteType = useCallback(() => {
+    return dteData?.identificacion?.tipoDte || "01";
+  }, [dteData]);
+
+  // 🆕 Obtener información del tipo DTE actual
+  const getCurrentDteInfo = useCallback(() => {
+    const tipoDte = getCurrentDteType();
+    return getDteInfo(tipoDte);
+  }, [getCurrentDteType, getDteInfo]);
 
   // Manejar datos del formulario DTE
   const handleDTEDataChange = useCallback((data) => {
@@ -90,28 +98,91 @@ const DTEManager = () => {
     }
   }, []);
 
-  // Manejar cambios en los cálculos
+  // 🆕 Manejar cambios en los cálculos - ACTUALIZADO
   const handleCalculationChange = useCallback((calcs) => {
     setCalculations(calcs);
 
-    // Actualizar datos del DTE con los cálculos
+    // Actualizar datos del DTE con los cálculos específicos por tipo
     if (dteData && calcs) {
-      setDteData(prevData => ({
-        ...prevData,
-        resumen: {
-          ...prevData.resumen,
-          subTotal: calcs.subtotal,
-          descuItem: calcs.descuentos,
-          subTotalVentas: calcs.subTotalVentas,
-          ivaPerci: calcs.iva,
-          reteRenta: calcs.reteRenta,
-          montoTotalOperacion: calcs.montoTotalOperacion,
-          totalPagar: calcs.totalPagar,
-          tributos: calcs.tributos
-        }
-      }));
+      const tipoDte = getCurrentDteType();
+      const dteInfo = getCurrentDteInfo();
+      
+      console.log(`🔧 Actualizando resumen para ${dteInfo.name} (${tipoDte})`);
+      console.log('📊 Cálculos recibidos:', calcs);
+      console.log('🎯 Campos específicos DTE:', calcs.dteSpecificFields);
+
+      // Construir resumen base
+      const baseResumen = {
+        ...dteData.resumen,
+        subTotal: calcs.subtotal,
+        descuItem: calcs.descuentos,
+        subTotalVentas: calcs.subTotalVentas,
+        montoTotalOperacion: calcs.montoTotalOperacion,
+        tributos: calcs.tributos
+      };
+
+      // 🆕 Agregar campos específicos según el tipo DTE
+      const resumenEspecifico = { ...baseResumen };
+
+      // Aplicar campos específicos del tipo DTE
+      if (calcs.dteSpecificFields) {
+        Object.entries(calcs.dteSpecificFields).forEach(([field, value]) => {
+          resumenEspecifico[field] = value;
+        });
+      }
+
+      // Campos comunes según aplique
+      if (dteInfo.retencion?.applies) {
+        resumenEspecifico.reteRenta = calcs.reteRenta;
+      }
+
+      // totalPagar solo para tipos que lo requieren
+      if (dteInfo.calculations?.totalPagar) {
+        resumenEspecifico.totalPagar = calcs.totalPagar;
+      }
+
+      // Actualizar estructura específica según tipo
+      let updatedData = { ...dteData };
+
+      switch (tipoDte) {
+        case "09": // DCL - usa cuerpoDocumento
+          updatedData.cuerpoDocumento = {
+            ...updatedData.cuerpoDocumento,
+            ...calcs.dteSpecificFields
+          };
+          break;
+
+        case "07": // CR - estructura híbrida
+          updatedData.resumen = {
+            ...baseResumen,
+            ...calcs.dteSpecificFields
+          };
+          // CR no tiene algunos campos comunes
+          delete updatedData.resumen.totalPagar;
+          delete updatedData.resumen.montoTotalOperacion;
+          break;
+
+        case "15": // CD - estructura ultra simple
+          updatedData.resumen = {
+            valorTotal: calcs.dteSpecificFields.valorTotal,
+            totalLetras: convertNumberToWords(calcs.dteSpecificFields.valorTotal)
+          };
+          break;
+
+        case "04": // NR - sin totalPagar
+          updatedData.resumen = { ...resumenEspecifico };
+          delete updatedData.resumen.totalPagar;
+          break;
+
+        default: // Estructura resumen normal
+          updatedData.resumen = resumenEspecifico;
+          break;
+      }
+
+      console.log('✅ Resumen actualizado:', updatedData.resumen);
+      setDteData(updatedData);
     }
-  }, [dteData]);
+  }, [dteData, getCurrentDteType, getCurrentDteInfo]);
 
   // Manejar documento firmado
   const handleDocumentSigned = useCallback((signed) => {
@@ -180,11 +251,17 @@ const DTEManager = () => {
     }
   };
 
-  // Preparar datos para el preview
+  // 🆕 Preparar datos para el preview - ACTUALIZADO
   const getPreviewData = () => {
     if (!dteData || !calculations) return null;
 
-    return {
+    const tipoDte = getCurrentDteType();
+    const dteInfo = getCurrentDteInfo();
+
+    // Datos base del preview
+    const basePreviewData = {
+      tipoDte: tipoDte,
+      dteName: dteInfo.name,
       emisor: {
         nombre: dteData.emisor?.nombre || '',
         nombreComercial: dteData.emisor?.nombre || '',
@@ -225,8 +302,10 @@ const DTEManager = () => {
         fechaEmision: dteData.identificacion?.fecEmi || '',
         subTotal: calculations.subTotalVentas || 0,
         totalPagar: calculations.totalPagar || 0,
+        // 🆕 Campos específicos por tipo
+        dteSpecificFields: calculations.dteSpecificFields || {}
       },
-      valorLetras: convertNumberToWords(calculations.totalPagar || 0),
+      valorLetras: convertNumberToWords(calculations.totalPagar || calculations.dteSpecificFields?.valorTotal || 0),
       condicionOperacion: 'Contado',
       firmas: signedDocument?.firma ? {
         entrega: {
@@ -239,6 +318,8 @@ const DTEManager = () => {
         }
       } : undefined
     };
+
+    return basePreviewData;
   };
 
   // Convertir número a palabras (función simplificada)
@@ -261,7 +342,9 @@ const DTEManager = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `DTE-${dataToDownload.identificacion?.codigoGeneracion || 'draft'}.json`;
+    const tipoDte = getCurrentDteType();
+    const dteInfo = getCurrentDteInfo();
+    link.download = `${dteInfo.name.replace(/\s+/g, '_')}-${dataToDownload.identificacion?.codigoGeneracion || 'draft'}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -269,7 +352,6 @@ const DTEManager = () => {
   };
 
   // Renderizar indicador de paso
-  // Indicador de pasos: ícono arriba y texto abajo, con ajuste especial para el primer paso en móvil
   const renderStepIndicator = () => (
     <div className="w-full max-w-2xl mx-auto flex items-center justify-between mb-8">
       {steps.map((step, index) => (
@@ -295,22 +377,30 @@ const DTEManager = () => {
               step.title
             )}
           </span>
-          {/* Línea divisora opcional: la puedes agregar aquí si quieres, ajustando el diseño */}
         </div>
       ))}
     </div>
   );
-
-
 
   return (
     <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6">
       <div className="mb-8">
         {/* Header y ambiente */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Gestión de Documentos Tributarios Electrónicos
-          </h1>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Gestión de Documentos Tributarios Electrónicos
+            </h1>
+            {/* 🆕 Mostrar tipo DTE actual */}
+            {dteData && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-gray-600">Tipo actual:</span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
+                  {getCurrentDteType()} - {getCurrentDteInfo().name}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
             {/* Selector de ambiente */}
             <select
@@ -382,11 +472,26 @@ const DTEManager = () => {
             </div>
           )}
 
-          {/* Paso 2: Cálculos */}
+          {/* Paso 2: Cálculos - 🆕 ACTUALIZADO */}
           {activeStep === 2 && (
             <div className="space-y-6">
+              {/* 🆕 Información del tipo DTE */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                  Calculando para: {getCurrentDteInfo().name} ({getCurrentDteType()})
+                </h3>
+                <div className="text-xs text-blue-800 space-y-1">
+                  <div>• <strong>IVA:</strong> {getCurrentDteInfo().iva.applies ? `${(getCurrentDteInfo().iva.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
+                  <div>• <strong>Retención:</strong> {getCurrentDteInfo().retencion.applies ? `${(getCurrentDteInfo().retencion.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
+                  {getCurrentDteInfo().minAmount > 0 && (
+                    <div>• <strong>Monto mínimo:</strong> ${getCurrentDteInfo().minAmount.toFixed(2)}</div>
+                  )}
+                </div>
+              </div>
+
               <TaxCalculator
                 items={dteData?.cuerpoDocumento || []}
+                tipoDte={getCurrentDteType()} // 🆕 Pasar tipo DTE
                 onCalculationChange={handleCalculationChange}
               />
               <div className="flex flex-col sm:flex-row justify-between gap-3">
@@ -439,7 +544,7 @@ const DTEManager = () => {
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-blue-600" />
-                  Revisión del Documento
+                  Revisión del Documento - {getCurrentDteInfo().name}
                 </h3>
                 <div className="mb-6">
                   <p className="text-gray-600 mb-4">
@@ -465,7 +570,7 @@ const DTEManager = () => {
                 {/* Vista previa del documento */}
                 <div className="border border-gray-300 rounded-lg overflow-hidden">
                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-300">
-                    <h4 className="font-medium text-gray-900">Vista Previa de la Factura</h4>
+                    <h4 className="font-medium text-gray-900">Vista Previa - {getCurrentDteInfo().name}</h4>
                   </div>
                   <div className="p-4 bg-gray-100 max-h-96 overflow-x-auto overflow-y-auto">
                     {getPreviewData() && (
@@ -512,7 +617,7 @@ const DTEManager = () => {
                     <dl className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <dt className="text-gray-600">Tipo de Documento:</dt>
-                        <dd className="text-gray-900">{getCatalogValue('TIPOS_DTE', dteData?.identificacion?.tipoDocumento)}</dd>
+                        <dd className="text-gray-900">{getCurrentDteInfo().name}</dd>
                       </div>
                       <div className="flex justify-between">
                         <dt className="text-gray-600">Código de Generación:</dt>
@@ -520,7 +625,9 @@ const DTEManager = () => {
                       </div>
                       <div className="flex justify-between">
                         <dt className="text-gray-600">Total a Pagar:</dt>
-                        <dd className="text-gray-900 font-semibold">${dteData?.resumen?.totalPagar?.toFixed(2)}</dd>
+                        <dd className="text-gray-900 font-semibold">
+                          ${(dteData?.resumen?.totalPagar || dteData?.resumen?.valorTotal || 0).toFixed(2)}
+                        </dd>
                       </div>
                       <div className="flex justify-between">
                         <dt className="text-gray-600">Estado:</dt>
@@ -604,8 +711,66 @@ const DTEManager = () => {
             </div>
           )}
         </div>
+        
         {/* Panel lateral */}
         <div className="space-y-6 mt-8 lg:mt-0">
+          {/* 🆕 Información del DTE actual */}
+          {dteData && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Documento Actual</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tipo:</span>
+                  <span className="font-medium text-blue-600">{getCurrentDteInfo().name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Código:</span>
+                  <span className="font-mono">{getCurrentDteType()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">IVA:</span>
+                  <span className={getCurrentDteInfo().iva.applies ? "text-green-600" : "text-gray-500"}>
+                    {getCurrentDteInfo().iva.applies ? `${(getCurrentDteInfo().iva.rate * 100).toFixed(0)}%` : 'No aplica'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Retención:</span>
+                  <span className={getCurrentDteInfo().retencion.applies ? "text-orange-600" : "text-gray-500"}>
+                    {getCurrentDteInfo().retencion.applies ? `${(getCurrentDteInfo().retencion.rate * 100).toFixed(0)}%` : 'No aplica'}
+                  </span>
+                </div>
+                {calculations && (
+                  <>
+                    <hr className="my-3" />
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-medium">${calculations.subTotalVentas?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    {calculations.iva > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">IVA:</span>
+                        <span className="font-medium text-green-600">+${calculations.iva.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {calculations.reteRenta > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Retención:</span>
+                        <span className="font-medium text-orange-600">-${calculations.reteRenta.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <hr className="my-2" />
+                    <div className="flex justify-between font-semibold">
+                      <span>Total:</span>
+                      <span className="text-lg">
+                        ${(calculations.totalPagar || calculations.dteSpecificFields?.valorTotal || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Acciones rápidas */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
@@ -628,6 +793,7 @@ const DTEManager = () => {
               </button>
             </div>
           </div>
+          
           {/* Estado del proceso */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado del Proceso</h3>
@@ -650,15 +816,34 @@ const DTEManager = () => {
               ))}
             </div>
           </div>
-          {/* Información adicional */}
+          
+          {/* 🆕 Información específica del tipo DTE */}
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">Información</h3>
+            <h3 className="text-sm font-semibold text-blue-900 mb-2">
+              {dteData ? `Información - ${getCurrentDteInfo().name}` : 'Información General'}
+            </h3>
             <ul className="text-xs text-blue-800 space-y-1">
-              <li>• Todos los documentos son validados contra esquemas oficiales</li>
-              <li>• La firma digital es requerida antes del envío</li>
-              <li>• El código QR permite consulta pública</li>
-              <li>• Revise el documento antes de enviarlo</li>
-              <li>• Ambiente actual: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
+              {dteData ? (
+                <>
+                  <li>• Estructura: {getCurrentDteInfo().structure}</li>
+                  <li>• Schema: {CATALOGS.TIPOS_DTE.find(t => t.codigo === getCurrentDteType())?.esquema || 'N/A'}</li>
+                  {getCurrentDteInfo().minAmount > 0 && (
+                    <li>• Monto mínimo: ${getCurrentDteInfo().minAmount.toFixed(2)}</li>
+                  )}
+                  {getCurrentDteInfo().allowNegative && (
+                    <li>• ⚠️ Permite valores negativos</li>
+                  )}
+                  <li>• Validación: Esquema oficial MH</li>
+                </>
+              ) : (
+                <>
+                  <li>• Seleccione el tipo de DTE en el formulario</li>
+                  <li>• Cada tipo tiene reglas específicas</li>
+                  <li>• Los cálculos se ajustan automáticamente</li>
+                  <li>• Validación contra esquemas oficiales</li>
+                </>
+              )}
+              <li>• Ambiente: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
             </ul>
           </div>
         </div>
