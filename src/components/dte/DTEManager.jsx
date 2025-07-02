@@ -2,10 +2,10 @@
 // IMPORTS CORREGIDOS según tu estructura final
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  FileText, 
-  Send, 
-  Eye, 
+import {
+  FileText,
+  Send,
+  Eye,
   Download,
   AlertCircle,
   CheckCircle,
@@ -68,10 +68,21 @@ const DTEManager = () => {
     apiService.setEnvironment(environment === 'production');
   }, [environment]);
 
+  // ...
+  useEffect(() => {
+    apiService.setEnvironment(environment === 'production');
+  }, [environment]);
+
+  // Scroll al top al cambiar de paso
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeStep]);
+
+
   // Manejar datos del formulario DTE
   const handleDTEDataChange = useCallback((data) => {
     setDteData(data);
-    
+
     // Validar documento cuando cambie
     if (data && data.identificacion?.tipoDocumento) {
       const validation = schemaValidator.validateDocumentByType(data);
@@ -82,7 +93,7 @@ const DTEManager = () => {
   // Manejar cambios en los cálculos
   const handleCalculationChange = useCallback((calcs) => {
     setCalculations(calcs);
-    
+
     // Actualizar datos del DTE con los cálculos
     if (dteData && calcs) {
       setDteData(prevData => ({
@@ -126,7 +137,7 @@ const DTEManager = () => {
     try {
       const result = await apiService.sendDTE(signedDocument);
       setSubmissionResult(result);
-      
+
       if (result.success) {
         // Actualizar documento con sello recibido
         setSignedDocument(prev => ({
@@ -218,13 +229,13 @@ const DTEManager = () => {
       valorLetras: convertNumberToWords(calculations.totalPagar || 0),
       condicionOperacion: 'Contado',
       firmas: signedDocument?.firma ? {
-        entrega: { 
-          nombre: dteData.emisor?.nombre || '', 
-          documento: dteData.emisor?.nit || '' 
+        entrega: {
+          nombre: dteData.emisor?.nombre || '',
+          documento: dteData.emisor?.nit || ''
         },
-        recibe: { 
-          nombre: dteData.receptor?.nombre || '', 
-          documento: dteData.receptor?.numDocumento || '' 
+        recibe: {
+          nombre: dteData.receptor?.nombre || '',
+          documento: dteData.receptor?.numDocumento || ''
         }
       } : undefined
     };
@@ -258,45 +269,49 @@ const DTEManager = () => {
   };
 
   // Renderizar indicador de paso
+  // Indicador de pasos: ícono arriba y texto abajo, con ajuste especial para el primer paso en móvil
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
+    <div className="w-full max-w-2xl mx-auto flex items-center justify-between mb-8">
       {steps.map((step, index) => (
-        <div key={step.number} className="flex items-center">
+        <div key={step.number} className="flex flex-col items-center flex-1 min-w-0">
+          {/* Círculo con ícono */}
           <div
-            className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-              activeStep >= step.number
+            className={`flex items-center justify-center w-8 h-8 rounded-full border-2 mb-1 ${activeStep >= step.number
                 ? 'bg-blue-600 border-blue-600 text-white'
                 : 'bg-white border-gray-300 text-gray-400'
-            }`}
+              }`}
           >
             <step.icon className="w-5 h-5" />
           </div>
-          <div className="ml-2 mr-4">
-            <p className={`text-sm font-medium ${
-              activeStep >= step.number ? 'text-blue-600' : 'text-gray-400'
+          {/* Texto abajo, ajustado para el primer paso */}
+          <span className={`text-[11px] text-center font-medium ${activeStep >= step.number ? 'text-blue-600' : 'text-gray-400'
             }`}>
-              {step.title}
-            </p>
-          </div>
-          {index < steps.length - 1 && (
-            <div className={`w-12 h-0.5 mx-2 ${
-              activeStep > step.number ? 'bg-blue-600' : 'bg-gray-300'
-            }`} />
-          )}
+            {index === 0 ? (
+              <>
+                <span className="inline sm:hidden">Datos</span>
+                <span className="hidden sm:inline">Datos del DTE</span>
+              </>
+            ) : (
+              step.title
+            )}
+          </span>
+          {/* Línea divisora opcional: la puedes agregar aquí si quieres, ajustando el diseño */}
         </div>
       ))}
     </div>
   );
 
+
+
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">
+        {/* Header y ambiente */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Gestión de Documentos Tributarios Electrónicos
           </h1>
-          
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             {/* Selector de ambiente */}
             <select
               value={environment}
@@ -306,22 +321,21 @@ const DTEManager = () => {
               <option value="test">Ambiente de Pruebas</option>
               <option value="production">Ambiente de Producción</option>
             </select>
-            
             {/* Indicador de ambiente */}
-            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-              environment === 'production' 
-                ? 'bg-red-100 text-red-800' 
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${environment === 'production'
+                ? 'bg-red-100 text-red-800'
                 : 'bg-yellow-100 text-yellow-800'
-            }`}>
+              }`}>
               {environment === 'production' ? 'PRODUCCIÓN' : 'PRUEBAS'}
             </div>
           </div>
         </div>
-        
         {renderStepIndicator()}
       </div>
 
+      {/* Main layout responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Panel principal */}
         <div className="lg:col-span-2">
           {/* Paso 1: Formulario DTE */}
           {activeStep === 1 && (
@@ -330,22 +344,19 @@ const DTEManager = () => {
                 onDataChange={handleDTEDataChange}
                 initialData={dteData}
               />
-              
               {validationResult && (
-                <div className={`p-4 rounded-lg ${
-                  validationResult.isValid 
-                    ? 'bg-green-50 border border-green-200' 
+                <div className={`p-4 rounded-lg ${validationResult.isValid
+                    ? 'bg-green-50 border border-green-200'
                     : 'bg-red-50 border border-red-200'
-                }`}>
+                  }`}>
                   <div className="flex items-center gap-2">
                     {validationResult.isValid ? (
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     ) : (
                       <AlertCircle className="w-5 h-5 text-red-600" />
                     )}
-                    <span className={`font-medium ${
-                      validationResult.isValid ? 'text-green-800' : 'text-red-800'
-                    }`}>
+                    <span className={`font-medium ${validationResult.isValid ? 'text-green-800' : 'text-red-800'
+                      }`}>
                       {validationResult.message}
                     </span>
                   </div>
@@ -358,8 +369,8 @@ const DTEManager = () => {
                   )}
                 </div>
               )}
-              
-              <div className="flex justify-end">
+              {/* Botón continuar responsive */}
+              <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setActiveStep(2)}
                   disabled={!dteData || (validationResult && !validationResult.isValid)}
@@ -378,8 +389,7 @@ const DTEManager = () => {
                 items={dteData?.cuerpoDocumento || []}
                 onCalculationChange={handleCalculationChange}
               />
-              
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <button
                   onClick={() => setActiveStep(1)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
@@ -405,8 +415,7 @@ const DTEManager = () => {
                 onDocumentSigned={handleDocumentSigned}
                 onQRGenerated={handleQRGenerated}
               />
-              
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <button
                   onClick={() => setActiveStep(2)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
@@ -432,13 +441,11 @@ const DTEManager = () => {
                   <Eye className="w-5 h-5 text-blue-600" />
                   Revisión del Documento
                 </h3>
-                
                 <div className="mb-6">
                   <p className="text-gray-600 mb-4">
                     Revise cuidadosamente todos los datos antes de enviar el documento al Ministerio de Hacienda.
                   </p>
-                  
-                  <div className="flex gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
                     <button
                       onClick={handlePrintPreview}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
@@ -455,15 +462,14 @@ const DTEManager = () => {
                     </button>
                   </div>
                 </div>
-
                 {/* Vista previa del documento */}
                 <div className="border border-gray-300 rounded-lg overflow-hidden">
                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-300">
                     <h4 className="font-medium text-gray-900">Vista Previa de la Factura</h4>
                   </div>
-                  <div className="p-4 bg-gray-100 max-h-96 overflow-y-auto">
+                  <div className="p-4 bg-gray-100 max-h-96 overflow-x-auto overflow-y-auto">
                     {getPreviewData() && (
-                      <div className="transform scale-75 origin-top">
+                      <div className="min-w-[320px] sm:min-w-0 transform scale-75 sm:scale-100 origin-top">
                         <FacturaPreview
                           ref={previewRef}
                           {...getPreviewData()}
@@ -473,8 +479,8 @@ const DTEManager = () => {
                   </div>
                 </div>
               </div>
-              
-              <div className="flex justify-between">
+              {/* Navegación */}
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <button
                   onClick={() => setActiveStep(3)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
@@ -500,7 +506,6 @@ const DTEManager = () => {
                   <Send className="w-5 h-5 text-blue-600" />
                   Enviar DTE al Ministerio de Hacienda
                 </h3>
-                
                 <div className="space-y-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Resumen del Documento</h4>
@@ -525,8 +530,7 @@ const DTEManager = () => {
                       </div>
                     </dl>
                   </div>
-                  
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <button
                       onClick={handleSubmitDTE}
                       disabled={isSubmitting || !signedDocument}
@@ -546,22 +550,19 @@ const DTEManager = () => {
                     </button>
                   </div>
                 </div>
-                
                 {submissionResult && (
-                  <div className={`mt-4 p-4 rounded-lg ${
-                    submissionResult.success 
-                      ? 'bg-green-50 border border-green-200' 
+                  <div className={`mt-4 p-4 rounded-lg ${submissionResult.success
+                      ? 'bg-green-50 border border-green-200'
                       : 'bg-red-50 border border-red-200'
-                  }`}>
+                    }`}>
                     <div className="flex items-center gap-2">
                       {submissionResult.success ? (
                         <CheckCircle className="w-5 h-5 text-green-600" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-red-600" />
                       )}
-                      <span className={`font-medium ${
-                        submissionResult.success ? 'text-green-800' : 'text-red-800'
-                      }`}>
+                      <span className={`font-medium ${submissionResult.success ? 'text-green-800' : 'text-red-800'
+                        }`}>
                         {submissionResult.success ? 'DTE enviado correctamente' : 'Error al enviar DTE'}
                       </span>
                     </div>
@@ -576,8 +577,7 @@ const DTEManager = () => {
                     )}
                   </div>
                 )}
-                
-                <div className="flex justify-between mt-6">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
                   <button
                     onClick={() => setActiveStep(4)}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
@@ -604,9 +604,8 @@ const DTEManager = () => {
             </div>
           )}
         </div>
-
         {/* Panel lateral */}
-        <div className="space-y-6">
+        <div className="space-y-6 mt-8 lg:mt-0">
           {/* Acciones rápidas */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
@@ -629,32 +628,28 @@ const DTEManager = () => {
               </button>
             </div>
           </div>
-
           {/* Estado del proceso */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado del Proceso</h3>
             <div className="space-y-3">
               {steps.map((step) => (
                 <div key={step.number} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    activeStep > step.number
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${activeStep > step.number
                       ? 'bg-green-100 text-green-800'
                       : activeStep === step.number
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}>
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}>
                     {activeStep > step.number ? '✓' : step.number}
                   </div>
-                  <span className={`text-sm ${
-                    activeStep >= step.number ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
+                  <span className={`text-sm ${activeStep >= step.number ? 'text-gray-900' : 'text-gray-500'
+                    }`}>
                     {step.title}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-
           {/* Información adicional */}
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
             <h3 className="text-sm font-semibold text-blue-900 mb-2">Información</h3>
