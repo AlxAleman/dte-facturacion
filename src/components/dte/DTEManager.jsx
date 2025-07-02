@@ -1,7 +1,7 @@
 // src/components/dte/DTEManager.jsx
 // IMPORTS CORREGIDOS según tu estructura final
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   FileText, 
   Send, 
@@ -11,13 +11,16 @@ import {
   CheckCircle,
   Clock,
   Settings,
-  RefreshCw
+  RefreshCw,
+  Printer,
+  Edit
 } from 'lucide-react';
 
 // Imports según tu estructura actual ✅
 import DteForm from './DteForm';                                    // ✅ Mismo directorio
 import TaxCalculator from '../../calculadora/TaxCalculator';        // ✅ Tu carpeta calculadora  
 import SignatureQRManager from '../../calculadora/SignatureQRManager';
+import FacturaPreview from './FacturaPreview';                      // ✅ Nuevo import para preview
 import { useTaxCalculations } from '../hooks/useTaxCalculations';   // ✅ Tu hooks
 import { useQRGenerator } from '../hooks/useQRGenerator';           // ✅ Tu hooks  
 import { schemaValidator } from '../services/schemaValidator';      // ✅ Tu services
@@ -35,11 +38,15 @@ const DTEManager = () => {
   const [validationResult, setValidationResult] = useState(null);
   const [environment, setEnvironment] = useState('test');
 
+  // Referencias para preview
+  const previewRef = useRef(null);
+
   const steps = [
     { number: 1, title: 'Datos del DTE', icon: FileText },
     { number: 2, title: 'Cálculos', icon: Settings },
     { number: 3, title: 'Firma y QR', icon: CheckCircle },
-    { number: 4, title: 'Envío', icon: Send }
+    { number: 4, title: 'Revisión', icon: Eye },
+    { number: 5, title: 'Envío', icon: Send }
   ];
 
   // Cargar esquemas al inicializar
@@ -98,7 +105,7 @@ const DTEManager = () => {
   // Manejar documento firmado
   const handleDocumentSigned = useCallback((signed) => {
     setSignedDocument(signed);
-    setActiveStep(4); // Pasar al paso de envío
+    setActiveStep(4); // Pasar al paso de revisión
   }, []);
 
   // Manejar QR generado
@@ -139,6 +146,99 @@ const DTEManager = () => {
     }
   };
 
+  // Imprimir preview
+  const handlePrintPreview = () => {
+    if (previewRef.current) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Vista Previa DTE</title>
+            <style>
+              body { margin: 0; font-family: Arial, sans-serif; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            ${previewRef.current.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  // Preparar datos para el preview
+  const getPreviewData = () => {
+    if (!dteData || !calculations) return null;
+
+    return {
+      emisor: {
+        nombre: dteData.emisor?.nombre || '',
+        nombreComercial: dteData.emisor?.nombre || '',
+        nit: dteData.emisor?.nit || '',
+        nrc: dteData.emisor?.nrc || '',
+        actividad: dteData.emisor?.descActividad || 'Actividad no especificada',
+        direccion: dteData.emisor?.direccion || '',
+        telefono: dteData.emisor?.telefono || '',
+        correo: dteData.emisor?.correo || ''
+      },
+      receptor: {
+        nombre: dteData.receptor?.nombre || '',
+        nit: dteData.receptor?.numDocumento || '',
+        nrc: dteData.receptor?.nrc || '',
+        actividad: dteData.receptor?.actividad || '',
+        direccion: dteData.receptor?.direccion || '',
+        nombreComercial: dteData.receptor?.nombreComercial || '',
+        telefono: dteData.receptor?.telefono || '',
+        correo: dteData.receptor?.correo || ''
+      },
+      items: dteData.cuerpoDocumento?.map(item => ({
+        cantidad: item.cantidad || 0,
+        unidad: 'Unidad',
+        codigo: item.codigo || `ITEM-${item.numItem}`,
+        descripcion: item.descripcion || '',
+        precio: item.precioUni || 0,
+        descuento: item.montoDescu || 0,
+        noSujetas: 0,
+        exentas: 0,
+        gravadas: ((item.cantidad || 0) * (item.precioUni || 0)) - (item.montoDescu || 0)
+      })) || [],
+      resumen: {
+        codigoGeneracion: dteData.identificacion?.codigoGeneracion || '',
+        numeroControl: dteData.identificacion?.numeroControl || '',
+        selloRecepcion: signedDocument?.selloRecibido || '',
+        modeloFacturacion: 'Modelo Facturación Previo',
+        tipoTransmision: 'Transmisión Normal',
+        fechaEmision: dteData.identificacion?.fecEmi || '',
+        subTotal: calculations.subTotalVentas || 0,
+        totalPagar: calculations.totalPagar || 0,
+      },
+      valorLetras: convertNumberToWords(calculations.totalPagar || 0),
+      condicionOperacion: 'Contado',
+      firmas: signedDocument?.firma ? {
+        entrega: { 
+          nombre: dteData.emisor?.nombre || '', 
+          documento: dteData.emisor?.nit || '' 
+        },
+        recibe: { 
+          nombre: dteData.receptor?.nombre || '', 
+          documento: dteData.receptor?.numDocumento || '' 
+        }
+      } : undefined
+    };
+  };
+
+  // Convertir número a palabras (función simplificada)
+  const convertNumberToWords = (num) => {
+    const formatter = new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD'
+    });
+    return formatter.format(num).replace('US$', '') + ' dólares';
+  };
+
   // Descargar JSON del DTE
   const downloadDTEJson = () => {
     const dataToDownload = signedDocument || dteData;
@@ -155,88 +255,6 @@ const DTEManager = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
-
-  // Previsualizar DTE
-  const previewDTE = () => {
-    if (!dteData) return;
-
-    const previewWindow = window.open('', '_blank');
-    const content = `
-      <html>
-        <head>
-          <title>Vista Previa DTE</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-            .section { margin-bottom: 15px; }
-            .label { font-weight: bold; color: #333; }
-            .value { margin-left: 10px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2>Documento Tributario Electrónico</h2>
-            <p><span class="label">Tipo:</span> ${getCatalogValue('TIPOS_DTE', dteData.identificacion?.tipoDocumento)}</p>
-            <p><span class="label">Código:</span> ${dteData.identificacion?.codigoGeneracion}</p>
-            <p><span class="label">Fecha:</span> ${dteData.identificacion?.fecEmi}</p>
-          </div>
-          
-          <div class="section">
-            <h3>Emisor</h3>
-            <p><span class="label">Nombre:</span> ${dteData.emisor?.nombre}</p>
-            <p><span class="label">NIT:</span> ${dteData.emisor?.nit}</p>
-          </div>
-          
-          <div class="section">
-            <h3>Receptor</h3>
-            <p><span class="label">Nombre:</span> ${dteData.receptor?.nombre || 'CONSUMIDOR FINAL'}</p>
-            <p><span class="label">Documento:</span> ${dteData.receptor?.numDocumento || 'N/A'}</p>
-          </div>
-          
-          <div class="section">
-            <h3>Detalle</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th>Cantidad</th>
-                  <th>Precio Unitario</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${dteData.cuerpoDocumento?.map(item => `
-                  <tr>
-                    <td>${item.descripcion}</td>
-                    <td>${item.cantidad}</td>
-                    <td>$${item.precioUni?.toFixed(2)}</td>
-                    <td>$${(item.cantidad * item.precioUni)?.toFixed(2)}</td>
-                  </tr>
-                `).join('') || ''}
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="section">
-            <h3>Resumen</h3>
-            <p><span class="label">Subtotal:</span> $${dteData.resumen?.subTotal?.toFixed(2) || '0.00'}</p>
-            <p><span class="label">IVA:</span> $${dteData.resumen?.ivaPerci?.toFixed(2) || '0.00'}</p>
-            <p><span class="label">Total a Pagar:</span> $${dteData.resumen?.totalPagar?.toFixed(2) || '0.00'}</p>
-          </div>
-          
-          <script>
-            window.print();
-          </script>
-        </body>
-      </html>
-    `;
-    
-    previewWindow.document.write(content);
-    previewWindow.document.close();
   };
 
   // Renderizar indicador de paso
@@ -400,14 +418,82 @@ const DTEManager = () => {
                   disabled={!signedDocument}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  Continuar a Revisión
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Paso 4: Preview/Revisión */}
+          {activeStep === 4 && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-blue-600" />
+                  Revisión del Documento
+                </h3>
+                
+                <div className="mb-6">
+                  <p className="text-gray-600 mb-4">
+                    Revise cuidadosamente todos los datos antes de enviar el documento al Ministerio de Hacienda.
+                  </p>
+                  
+                  <div className="flex gap-3 mb-4">
+                    <button
+                      onClick={handlePrintPreview}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Imprimir Preview
+                    </button>
+                    <button
+                      onClick={() => setActiveStep(1)}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Editar Documento
+                    </button>
+                  </div>
+                </div>
+
+                {/* Vista previa del documento */}
+                <div className="border border-gray-300 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-300">
+                    <h4 className="font-medium text-gray-900">Vista Previa de la Factura</h4>
+                  </div>
+                  <div className="p-4 bg-gray-100 max-h-96 overflow-y-auto">
+                    {getPreviewData() && (
+                      <div className="transform scale-75 origin-top">
+                        <FacturaPreview
+                          ref={previewRef}
+                          {...getPreviewData()}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setActiveStep(3)}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Volver
+                </button>
+                <button
+                  onClick={() => setActiveStep(5)}
+                  disabled={!signedDocument}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Continuar a Envío
                 </button>
               </div>
             </div>
           )}
 
-          {/* Paso 4: Envío */}
-          {activeStep === 4 && (
+          {/* Paso 5: Envío */}
+          {activeStep === 5 && (
             <div className="space-y-6">
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -493,7 +579,7 @@ const DTEManager = () => {
                 
                 <div className="flex justify-between mt-6">
                   <button
-                    onClick={() => setActiveStep(3)}
+                    onClick={() => setActiveStep(4)}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                   >
                     Volver
@@ -526,8 +612,8 @@ const DTEManager = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
             <div className="space-y-2">
               <button
-                onClick={previewDTE}
-                disabled={!dteData}
+                onClick={() => setActiveStep(4)}
+                disabled={!signedDocument}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="w-4 h-4" />
@@ -576,6 +662,7 @@ const DTEManager = () => {
               <li>• Todos los documentos son validados contra esquemas oficiales</li>
               <li>• La firma digital es requerida antes del envío</li>
               <li>• El código QR permite consulta pública</li>
+              <li>• Revise el documento antes de enviarlo</li>
               <li>• Ambiente actual: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
             </ul>
           </div>

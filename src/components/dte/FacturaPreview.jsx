@@ -29,7 +29,7 @@ const FacturaPreview = forwardRef(
       correo: "dte.labo@cegisa.com",
       ...emisor,
     };
-    
+
     receptor = {
       nombre: "ANA MARCELA RETANA DE CISNEROS",
       nit: "03737081-8",
@@ -40,7 +40,7 @@ const FacturaPreview = forwardRef(
       correo: "lameretana@gmail.com",
       ...receptor,
     };
-    
+
     items = items.length > 0 ? items : [
       {
         cantidad: 1,
@@ -102,7 +102,7 @@ const FacturaPreview = forwardRef(
     const sumVentas = items.reduce(
       (sum, item) => ({
         noSujetas: sum.noSujetas + Number(item.noSujetas || 0),
-        exentas: sum.exentas + Number(item.exentas || 0), 
+        exentas: sum.exentas + Number(item.exentas || 0),
         gravadas: sum.gravadas + Number(item.gravadas || 0),
       }),
       { noSujetas: 0, exentas: 0, gravadas: 0 }
@@ -115,6 +115,17 @@ const FacturaPreview = forwardRef(
     for (let i = currentRows; i < totalRowsNeeded; i++) {
       emptyRows.push(i);
     }
+
+    const formatDireccion = (direccion) => {
+      if (typeof direccion === 'string') {
+        return direccion;
+      }
+      if (typeof direccion === 'object' && direccion) {
+        const { departamento, municipio, complemento } = direccion;
+        return complemento || `${municipio || ''} ${departamento || ''}`.trim() || 'Sin dirección';
+      }
+      return 'Sin dirección';
+    };
 
     return (
       <div
@@ -134,9 +145,9 @@ const FacturaPreview = forwardRef(
           <div className="flex items-center justify-between">
             {/* SOLO LOGO REAL */}
             <div style={{ width: "60px" }}>
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
+              <img
+                src="/logo.png"
+                alt="Logo"
                 style={{ width: "50px", height: "50px", objectFit: "contain" }}
               />
             </div>
@@ -144,7 +155,7 @@ const FacturaPreview = forwardRef(
             {/* TÍTULO COMPACTO */}
             <div className="text-center flex-1">
               <div className="font-bold" style={{ fontSize: "16px", lineHeight: "1.2" }}>
-                DOCUMENTO TRIBUTARIO ELECTRÓNICO<br/>
+                DOCUMENTO TRIBUTARIO ELECTRÓNICO<br />
                 FACTURA
               </div>
             </div>
@@ -187,8 +198,7 @@ const FacturaPreview = forwardRef(
                 <div><span className="font-bold">NRC:</span> {emisor.nrc}</div>
               </div>
               <div><span className="font-bold">Actividad económica:</span> {emisor.actividad}</div>
-              <div><span className="font-bold">Dirección:</span> {emisor.direccion}</div>
-              <div className="flex gap-4">
+              <div><span className="font-bold">Dirección:</span> {formatDireccion(emisor.direccion)}</div>              <div className="flex gap-4">
                 <div><span className="font-bold">Teléfono:</span> {emisor.telefono}</div>
                 <div><span className="font-bold">Correo:</span> {emisor.correo}</div>
               </div>
@@ -204,7 +214,7 @@ const FacturaPreview = forwardRef(
                 <div><span className="font-bold">NRC:</span> {receptor.nrc || "---"}</div>
               </div>
               <div><span className="font-bold">Actividad económica:</span> {receptor.actividad || "---"}</div>
-              <div><span className="font-bold">Dirección:</span> {receptor.direccion}</div>
+              <div><span className="font-bold">Dirección:</span> {formatDireccion(receptor.direccion)}</div>
               <div><span className="font-bold">Nombre Comercial:</span> {receptor.nombreComercial || "---"}</div>
               <div className="flex gap-4">
                 <div><span className="font-bold">Tel:</span> {receptor.telefono}</div>

@@ -5,10 +5,10 @@ import DteForm from "./components/dte/DteForm";
 import DteHistory from "./components/dte/DteHistory";
 import DteContingency from "./components/dte/DteContingency";
 import DteInvalidation from "./components/dte/DteInvalidation";
-import DTEManager from "./components/dte/DTEManager";  // ← Nuevo sistema profesional
+import DTEManager from "./components/dte/DTEManager";  // ← Sistema profesional
 
 export default function App() {
-  // Mock autenticación simple (luego usarás AuthContext y hook real)
+  // Mock autenticación simple
   const isAuthenticated = !!localStorage.getItem("token");
 
   return (
@@ -17,16 +17,18 @@ export default function App() {
         {/* Ruta de Login - Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
         
-        {/* Ruta principal - Selector de tipo de DTE */}
+        {/* ================================ */}
+        {/* RUTA PRINCIPAL - SISTEMA PROFESIONAL */}
+        {/* ================================ */}
         <Route
-          path="/"
-          element={
-            isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
-          }
-        />
+  path="/"
+  element={
+    isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
+  }
+/>
         
         {/* ================================ */}
-        {/* SISTEMA PROFESIONAL - NUEVO     */}
+        {/* SISTEMA PROFESIONAL - RUTAS PRINCIPALES */}
         {/* ================================ */}
         <Route
           path="/dte/nuevo"
@@ -48,16 +50,38 @@ export default function App() {
         />
         
         {/* ================================ */}
-        {/* SISTEMA TRADICIONAL - EXISTENTE */}
+        {/* SISTEMA TRADICIONAL - PARA CASOS ESPECIALES */}
         {/* ================================ */}
+        <Route
+          path="/tradicional"
+          element={
+            isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/selector"
+          element={
+            isAuthenticated ? <DteTypeSelector /> : <Navigate to="/login" replace />
+          }
+        />
         <Route
           path="/emitir/:tipo"
           element={
             isAuthenticated ? <DteForm /> : <Navigate to="/login" replace />
           }
         />
+        
+        {/* ================================ */}
+        {/* RUTAS DE GESTIÓN */}
+        {/* ================================ */}
         <Route
           path="/historial"
+          element={
+            isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/dte/historial"
           element={
             isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
           }
@@ -69,33 +93,17 @@ export default function App() {
           }
         />
         <Route
-          path="/invalidacion"
-          element={
-            isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
-          }
-        />
-        
-        {/* ================================ */}
-        {/* RUTAS ADICIONALES RECOMENDADAS  */}
-        {/* ================================ */}
-        
-        {/* Rutas alternativas para el historial */}
-        <Route
-          path="/dte/historial"
-          element={
-            isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
-          }
-        />
-        
-        {/* Rutas alternativas para contingencia */}
-        <Route
           path="/dte/contingencia"
           element={
             isAuthenticated ? <DteContingency /> : <Navigate to="/login" replace />
           }
         />
-        
-        {/* Rutas alternativas para invalidación */}
+        <Route
+          path="/invalidacion"
+          element={
+            isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
+          }
+        />
         <Route
           path="/dte/invalidacion"
           element={
@@ -104,10 +112,36 @@ export default function App() {
         />
         
         {/* ================================ */}
-        {/* RUTAS DE DESARROLLO/TESTING      */}
+        {/* ACCESOS DIRECTOS POR TIPO */}
         {/* ================================ */}
+        <Route
+          path="/factura"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/ccf"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/nota-credito"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
+        <Route
+          path="/nota-debito"
+          element={
+            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
+          }
+        />
         
-        {/* Ruta para testing del sistema profesional */}
+        {/* ================================ */}
+        {/* RUTAS DE DESARROLLO */}
+        {/* ================================ */}
         <Route
           path="/test/profesional"
           element={
@@ -115,7 +149,7 @@ export default function App() {
           }
         />
         
-        {/* Ruta para comparar ambos sistemas */}
+        {/* Comparación de sistemas */}
         <Route
           path="/comparar"
           element={
@@ -148,58 +182,24 @@ export default function App() {
         />
         
         {/* ================================ */}
-        {/* RUTAS DE ACCESO DIRECTO          */}
+        {/* REDIRECTS ÚTILES */}
         {/* ================================ */}
-        
-        {/* Acceso directo por tipo de documento */}
-        <Route
-          path="/factura"
-          element={
-            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/ccf"
-          element={
-            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/nota-credito"
-          element={
-            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/nota-debito"
-          element={
-            isAuthenticated ? <DTEManager /> : <Navigate to="/login" replace />
-          }
-        />
-        
-        {/* ================================ */}
-        {/* REDIRECTS Y ALIASES              */}
-        {/* ================================ */}
-        
-        {/* Redirects del sistema anterior al nuevo */}
         <Route
           path="/crear-dte"
-          element={<Navigate to="/dte/nuevo" replace />}
+          element={<Navigate to="/" replace />}
         />
         <Route
           path="/nuevo-dte"
-          element={<Navigate to="/dte/nuevo" replace />}
+          element={<Navigate to="/" replace />}
         />
         <Route
           path="/emitir"
-          element={<Navigate to="/" replace />}
+          element={<Navigate to="/tradicional" replace />}
         />
         
         {/* ================================ */}
-        {/* FALLBACK - MANEJO DE ERRORES     */}
+        {/* PÁGINA 404 */}
         {/* ================================ */}
-        
-        {/* Página 404 personalizada para usuarios autenticados */}
         <Route
           path="/404"
           element={
@@ -213,13 +213,13 @@ export default function App() {
                       onClick={() => window.location.href = '/'}
                       className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                      Ir al Inicio
+                      Ir al Sistema Profesional
                     </button>
                     <button
-                      onClick={() => window.location.href = '/dte/nuevo'}
+                      onClick={() => window.location.href = '/tradicional'}
                       className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                     >
-                      Crear Nuevo DTE
+                      Sistema Tradicional
                     </button>
                     <button
                       onClick={() => window.location.href = '/historial'}
@@ -236,7 +236,7 @@ export default function App() {
           }
         />
         
-        {/* Fallback final: cualquier ruta no encontrada */}
+        {/* Fallback final */}
         <Route 
           path="*" 
           element={

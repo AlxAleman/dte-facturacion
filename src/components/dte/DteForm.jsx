@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 
+// Función helper para generar UUID
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16).toUpperCase();
+  });
+}
+
 const DteForm = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = useState({
     identificacion: {
@@ -8,7 +17,7 @@ const DteForm = ({ onDataChange, initialData }) => {
       ambiente: "01", // Pruebas
       tipoDte: "01", // Factura
       numeroControl: "DTE-01-00000001-000000000000001",
-      codigoGeneracion: "",
+      codigoGeneracion: generateUUID(), // ← Generar directamente aquí
       tipoModelo: "1",
       tipoOperacion: "1",
       fecEmi: new Date().toISOString().split('T')[0],
@@ -32,6 +41,11 @@ const DteForm = ({ onDataChange, initialData }) => {
     receptor: {
       nombre: "",
       numDocumento: "",
+      nrc: "",
+      nombreComercial: "",
+      actividad: "",
+      telefono: "",
+      correo: "",
       tipoDocumento: "13",
       direccion: {
         departamento: "05",
@@ -83,31 +97,28 @@ const DteForm = ({ onDataChange, initialData }) => {
     }
   });
 
-  // Generar UUID al cargar el componente
-  useEffect(() => {
-    if (!formData.identificacion.codigoGeneracion) {
-      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16).toUpperCase();
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        identificacion: {
-          ...prev.identificacion,
-          codigoGeneracion: uuid
-        }
-      }));
-    }
-  }, []);
+  // Flag para saber si estamos inicializando con datos existentes
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Notificar cambios al componente padre
+  // 🔧 FIX: Restaurar datos solo una vez al montar
   useEffect(() => {
-    if (onDataChange) {
+    if (initialData && !isInitialized) {
+      console.log('📝 Restaurando datos del formulario (una sola vez):', initialData);
+      setFormData(initialData);
+      setIsInitialized(true);
+    } else if (!initialData && !isInitialized) {
+      // Si no hay datos iniciales, marcar como inicializado para permitir onDataChange
+      console.log('✅ Sin datos iniciales, habilitando formulario');
+      setIsInitialized(true);
+    }
+  }, [initialData, isInitialized]);
+
+  // Notificar cambios al componente padre (solo después de inicializar)
+  useEffect(() => {
+    if (onDataChange && isInitialized) {
       onDataChange(formData);
     }
-  }, [formData, onDataChange]);
+  }, [formData, onDataChange, isInitialized]);
 
   const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
@@ -202,7 +213,7 @@ const DteForm = ({ onDataChange, initialData }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Documento
+              Número de Documento *
             </label>
             <input
               type="text"
@@ -210,6 +221,83 @@ const DteForm = ({ onDataChange, initialData }) => {
               onChange={(e) => handleInputChange('receptor', 'numDocumento', e.target.value)}
               placeholder="DUI, NIT, Pasaporte, etc."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              NRC
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.nrc || ''}
+              onChange={(e) => handleInputChange('receptor', 'nrc', e.target.value)}
+              placeholder="Número de registro de contribuyente"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre Comercial
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.nombreComercial || ''}
+              onChange={(e) => handleInputChange('receptor', 'nombreComercial', e.target.value)}
+              placeholder="Nombre comercial (opcional)"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Actividad Económica
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.actividad || ''}
+              onChange={(e) => handleInputChange('receptor', 'actividad', e.target.value)}
+              placeholder="Descripción de la actividad económica"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Teléfono
+            </label>
+            <input
+              type="tel"
+              value={formData.receptor.telefono || ''}
+              onChange={(e) => handleInputChange('receptor', 'telefono', e.target.value)}
+              placeholder="Número de teléfono"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Correo Electrónico
+            </label>
+            <input
+              type="email"
+              value={formData.receptor.correo || ''}
+              onChange={(e) => handleInputChange('receptor', 'correo', e.target.value)}
+              placeholder="correo@ejemplo.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dirección Completa *
+            </label>
+            <input
+              type="text"
+              value={formData.receptor.direccion?.complemento || ''}
+              onChange={(e) => handleInputChange('receptor', 'direccion', {
+                ...formData.receptor.direccion,
+                complemento: e.target.value
+              })}
+              placeholder="Dirección completa del receptor"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
             />
           </div>
         </div>
