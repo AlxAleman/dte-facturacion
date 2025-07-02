@@ -9,7 +9,8 @@ import DTEManager from "./components/dte/DTEManager";  // ← Sistema profesiona
 
 export default function App() {
   // Mock autenticación simple
-  const isAuthenticated = !!localStorage.getItem("token");
+  // const isAuthenticated = !!localStorage.getItem("token");
+  const isAuthenticated = true;
 
   return (
     <Router>
