@@ -20,39 +20,21 @@ export const useTaxCalculations = () => {
       structure: "resumen",
       iva: { applies: true, rate: 0.13, field: "totalIva" },
       retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
-      minAmount: 10.95, // $10.95 mínimo
+      minAmount: 10.95,
       requiredFields: ["totalGravada", "totalExenta", "totalNoSuj", "totalIva", "ivaRete1"],
       calculations: {
         totalGravada: true,
-        totalExenta: true, 
+        totalExenta: true,
         totalNoSuj: true,
         totalIva: true,
         ivaRete1: true,
         totalPagar: true
       }
     },
-    
-    // CCF - Comprobante de Crédito Fiscal  
+
+    // CCF - Comprobante de Crédito Fiscal
     "03": {
       name: "Comprobante de Crédito Fiscal",
-      structure: "resumen",
-      iva: { applies: true, rate: 0.13, field: "totalIva" },
-      retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
-      minAmount: 0.01, // Mayor que 0
-      requiredFields: ["totalGravada", "totalExenta", "totalNoSuj", "ivaPerci1", "ivaRete1"],
-      calculations: {
-        totalGravada: true,
-        totalExenta: true,
-        totalNoSuj: true,
-        ivaPerci1: true, // Campo específico de CCF
-        ivaRete1: true,
-        totalPagar: true
-      }
-    },
-
-    // NC - Nota de Crédito
-    "05": {
-      name: "Nota de Crédito", 
       structure: "resumen",
       iva: { applies: true, rate: 0.13, field: "totalIva" },
       retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
@@ -62,7 +44,25 @@ export const useTaxCalculations = () => {
         totalGravada: true,
         totalExenta: true,
         totalNoSuj: true,
-        ivaPerci1: true, // Como CCF
+        ivaPerci1: true,
+        ivaRete1: true,
+        totalPagar: true
+      }
+    },
+
+    // NC - Nota de Crédito
+    "05": {
+      name: "Nota de Crédito",
+      structure: "resumen",
+      iva: { applies: true, rate: 0.13, field: "totalIva" },
+      retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
+      minAmount: 0.01,
+      requiredFields: ["totalGravada", "totalExenta", "totalNoSuj", "ivaPerci1", "ivaRete1"],
+      calculations: {
+        totalGravada: true,
+        totalExenta: true,
+        totalNoSuj: true,
+        ivaPerci1: true,
         ivaRete1: true,
         totalPagar: true
       }
@@ -71,7 +71,7 @@ export const useTaxCalculations = () => {
     // ND - Nota de Débito
     "06": {
       name: "Nota de Débito",
-      structure: "resumen", 
+      structure: "resumen",
       iva: { applies: true, rate: 0.13, field: "totalIva" },
       retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
       minAmount: 0.01,
@@ -80,7 +80,7 @@ export const useTaxCalculations = () => {
         totalGravada: true,
         totalExenta: true,
         totalNoSuj: true,
-        ivaPerci1: true, // Como CCF
+        ivaPerci1: true,
         ivaRete1: true,
         totalPagar: true
       }
@@ -93,24 +93,24 @@ export const useTaxCalculations = () => {
       iva: { applies: false, rate: 0, field: null },
       retencion: { applies: false, rate: 0, field: null },
       minAmount: 0,
-      requiredFields: ["totalCompra", "ivaRete1"], // Estructura específica FSE
+      requiredFields: ["totalCompra", "ivaRete1"],
       calculations: {
-        totalCompra: true, // En lugar de totalGravada
-        ivaRete1: true, // Siempre 0 pero presente
+        totalCompra: true,
+        ivaRete1: true,
         totalPagar: true
       }
     },
 
     // FEX - Factura de Exportación
     "11": {
-      name: "Factura de Exportación", 
+      name: "Factura de Exportación",
       structure: "resumen",
       iva: { applies: false, rate: 0, field: null },
       retencion: { applies: false, rate: 0, field: null },
-      minAmount: 100.00, // $100 mínimo para exportación
+      minAmount: 100.00,
       requiredFields: ["totalGravada"],
       calculations: {
-        totalGravada: true, // Tiene totalGravada pero sin IVA
+        totalGravada: true,
         totalPagar: true
       }
     },
@@ -121,7 +121,7 @@ export const useTaxCalculations = () => {
       structure: "hibrida",
       iva: { applies: false, rate: 0, field: null },
       retencion: { applies: true, rate: 0.10, field: "totalIVAretenido", minThreshold: 0.01 },
-      minAmount: 0.01,
+      minAmount: 0.01, // min retención
       requiredFields: ["totalSujetoRetencion", "totalIVAretenido"],
       calculations: {
         totalSujetoRetencion: true,
@@ -129,7 +129,7 @@ export const useTaxCalculations = () => {
       }
     },
 
-    // NR - Nota de Remisión  
+    // NR - Nota de Remisión
     "04": {
       name: "Nota de Remisión",
       structure: "resumen",
@@ -138,10 +138,9 @@ export const useTaxCalculations = () => {
       minAmount: 0,
       requiredFields: ["totalGravada", "totalExenta", "totalNoSuj"],
       calculations: {
-        totalGravada: true, // Para control, sin IVA
+        totalGravada: true,
         totalExenta: true,
         totalNoSuj: true
-        // No tiene totalPagar
       }
     },
 
@@ -154,64 +153,74 @@ export const useTaxCalculations = () => {
       minAmount: 0,
       requiredFields: ["valorTotal"],
       calculations: {
-        valorTotal: true // Estructura ultra simple
+        valorTotal: true
       }
     },
 
     // DCL - Documento Contable de Liquidación
     "09": {
       name: "Documento Contable de Liquidación",
-      structure: "cuerpoDocumento", // Estructura diferente
-      iva: { applies: true, rate: 0.02, field: "ivaPercibido" }, // 2% específico
+      structure: "cuerpoDocumento",
+      iva: { applies: true, rate: 0.02, field: "ivaPercibido" },
       retencion: { applies: false, rate: 0, field: null },
       minAmount: 0,
       requiredFields: ["subTotal", "iva", "ivaPercibido", "ivaComision"],
       calculations: {
         subTotal: true,
         iva: true,
-        ivaPercibido: true, // 2% fijo
-        ivaComision: true // Campo único
+        ivaPercibido: true,
+        ivaComision: true
       }
     },
 
     // CL - Comprobante de Liquidación
     "08": {
-      name: "Comprobante de Liquidación", 
+      name: "Comprobante de Liquidación",
       structure: "resumen",
-      iva: { applies: true, rate: 0.13, field: "ivaPerci" }, // ivaPerci (no ivaPerci1)
+      iva: { applies: true, rate: 0.13, field: "ivaPerci" },
       retencion: { applies: true, rate: 0.10, field: "ivaRete1", minThreshold: 100.00 },
       minAmount: 0,
-      allowNegative: true, // Permite valores negativos
+      allowNegative: true,
       requiredFields: ["totalGravada", "totalExenta", "totalNoSuj", "totalExportacion"],
       calculations: {
         totalGravada: true,
-        totalExenta: true, 
+        totalExenta: true,
         totalNoSuj: true,
-        totalExportacion: true, // Campo único
-        ivaPerci: true, // Diferente a ivaPerci1
-        total: true // En lugar de totalPagar
+        totalExportacion: true,
+        ivaPerci: true,
+        total: true
       }
     }
   };
 
-  // Constantes generales (mantenidas por compatibilidad)
-  const IVA_RATE = 0.13; // 13%
-  const RENTA_RATE = 0.10; // 10% retención de renta
-  const MIN_RENTA_THRESHOLD = 100.00; // Umbral mínimo para retención
+  // Constantes generales
+  const IVA_RATE = 0.13;
+  const RENTA_RATE = 0.10;
+  const MIN_RENTA_THRESHOLD = 100.00;
 
   // Función para redondear según reglas de El Salvador
   const roundMoney = useCallback((amount) => {
     return Math.round(amount * 100) / 100;
   }, []);
 
-  // 🆕 Obtener reglas específicas por tipo DTE
   const getDteRules = useCallback((tipoDte) => {
-    return DTE_RULES[tipoDte] || DTE_RULES["01"]; // Default a FC si no se encuentra
+    return DTE_RULES[tipoDte] || DTE_RULES["01"];
   }, []);
 
-  // 🆕 Validar monto mínimo según tipo DTE
-  const validateMinAmount = useCallback((tipoDte, amount) => {
+  // --- CORRECCIÓN PARA CR (07): validar retención mínima, no monto total
+  const validateMinAmount = useCallback((tipoDte, amount, extra) => {
     const rules = getDteRules(tipoDte);
+    // Para CR validamos el monto de retención, no el monto total
+    if (tipoDte === "07") {
+      const rete = extra?.reteRenta ?? 0;
+      if (rete < (rules.retencion.minThreshold || 0.01)) {
+        return {
+          isValid: false,
+          error: `El monto mínimo de retención para ${rules.name} es $${(rules.retencion.minThreshold || 0.01).toFixed(2)}`
+        };
+      }
+      return { isValid: true };
+    }
     if (rules.minAmount && amount < rules.minAmount) {
       return {
         isValid: false,
@@ -221,20 +230,20 @@ export const useTaxCalculations = () => {
     return { isValid: true };
   }, [getDteRules]);
 
-  // Calcular impuestos para un ítem individual (actualizado)
+  // Calcular impuestos para un ítem individual
   const calculateItemTax = useCallback((item, tipoDte = "01") => {
     const { cantidad, precioUni, montoDescu = 0, noGravado = false } = item;
     const rules = getDteRules(tipoDte);
-    
+
     const subtotalItem = cantidad * precioUni;
     const descuentoItem = montoDescu;
     const ventasItem = subtotalItem - descuentoItem;
-    
+
     let ivaItem = 0;
     if (!noGravado && ventasItem > 0 && rules.iva.applies) {
       ivaItem = roundMoney(ventasItem * rules.iva.rate);
     }
-    
+
     return {
       ...item,
       ventasGravadas: (!noGravado && rules.iva.applies) ? roundMoney(ventasItem) : 0,
@@ -244,7 +253,7 @@ export const useTaxCalculations = () => {
     };
   }, [roundMoney, getDteRules]);
 
-  // 🆕 Calcular totales específicos por tipo DTE
+  // Calcular totales específicos por tipo DTE
   const calculateDocumentTotals = useCallback((items, options = {}) => {
     const {
       descuentoGlobal = 0,
@@ -274,50 +283,47 @@ export const useTaxCalculations = () => {
 
     // Calcular cada ítem
     const itemsCalculated = items.map(item => calculateItemTax(item, tipoDte));
-    
+
     // Cálculos base
     const subtotal = roundMoney(
       itemsCalculated.reduce((sum, item) => sum + (item.cantidad * item.precioUni), 0)
     );
-    
+
     const descuentosItems = roundMoney(
       itemsCalculated.reduce((sum, item) => sum + (item.montoDescu || 0), 0)
     );
-    
+
     const totalDescuentos = roundMoney(descuentosItems + descuentoGlobal);
     const subTotalVentas = roundMoney(subtotal - totalDescuentos);
-    
+
     const ventasGravadas = roundMoney(
       itemsCalculated.reduce((sum, item) => sum + item.ventasGravadas, 0)
     );
-    
+
     const ventasExentas = roundMoney(
       itemsCalculated.reduce((sum, item) => sum + item.ventasExentas, 0)
     );
 
-    // 🆕 Cálculos específicos por tipo DTE
+    // Cálculos específicos por tipo DTE
     let iva = 0;
     let reteRenta = 0;
     let montoTotalOperacion = 0;
     let totalPagar = 0;
     const dteSpecificFields = {};
 
-    // Calcular IVA según reglas del tipo
     if (rules.iva.applies) {
       iva = roundMoney(ventasGravadas * rules.iva.rate);
     }
 
-    // Calcular retención según reglas del tipo  
     if (rules.retencion.applies && aplicarRetencion) {
-      const baseRetencion = subTotalVentas;
-      if (baseRetencion >= (rules.retencion.minThreshold || 0)) {
+      const baseRetencion = rules.retencion.field === "totalIVAretenido" ? iva : subTotalVentas;
+      if (baseRetencion > (rules.retencion.minThreshold || 0)) {
         reteRenta = roundMoney(baseRetencion * rules.retencion.rate);
       }
     }
 
-    // Cálculos según estructura específica del DTE
     switch (tipoDte) {
-      case "01": // FC - Factura de Consumidor
+      case "01":
         montoTotalOperacion = roundMoney(subTotalVentas + iva);
         totalPagar = roundMoney(montoTotalOperacion - reteRenta);
         dteSpecificFields.totalGravada = ventasGravadas;
@@ -327,68 +333,69 @@ export const useTaxCalculations = () => {
         dteSpecificFields.ivaRete1 = reteRenta;
         break;
 
-      case "03": // CCF - Comprobante de Crédito Fiscal
-      case "05": // NC - Nota de Crédito  
-      case "06": // ND - Nota de Débito
+      case "03":
+      case "05":
+      case "06":
         montoTotalOperacion = roundMoney(subTotalVentas + iva);
         totalPagar = roundMoney(montoTotalOperacion - reteRenta);
         dteSpecificFields.totalGravada = ventasGravadas;
         dteSpecificFields.totalExenta = ventasExentas;
         dteSpecificFields.totalNoSuj = 0;
-        dteSpecificFields.ivaPerci1 = iva; // Campo específico CCF/NC/ND
+        dteSpecificFields.ivaPerci1 = iva;
         dteSpecificFields.ivaRete1 = reteRenta;
         break;
 
-      case "14": // FSE - Factura de Sujeto Excluido
+      case "14":
         montoTotalOperacion = subTotalVentas;
         totalPagar = subTotalVentas;
         dteSpecificFields.totalCompra = subTotalVentas;
-        dteSpecificFields.ivaRete1 = 0; // Siempre 0 pero presente
+        dteSpecificFields.ivaRete1 = 0;
         break;
 
-      case "11": // FEX - Factura de Exportación
+      case "11":
         montoTotalOperacion = subTotalVentas;
         totalPagar = subTotalVentas;
-        dteSpecificFields.totalGravada = ventasGravadas; // Tiene totalGravada sin IVA
+        dteSpecificFields.totalGravada = ventasGravadas;
         break;
 
-      case "07": // CR - Comprobante de Retención
+      case "07":
+        // Retención directa para CR
+        if (aplicarRetencion) {
+          reteRenta = roundMoney(subTotalVentas * 0.10);
+        }
         dteSpecificFields.totalSujetoRetencion = subTotalVentas;
         dteSpecificFields.totalIVAretenido = reteRenta;
-        // CR no tiene totalPagar
         break;
 
-      case "04": // NR - Nota de Remisión
+      case "04":
         montoTotalOperacion = subTotalVentas;
-        // NR no tiene totalPagar
         dteSpecificFields.totalGravada = ventasGravadas;
         dteSpecificFields.totalExenta = ventasExentas;
         dteSpecificFields.totalNoSuj = 0;
         break;
 
-      case "15": // CD - Comprobante de Donación
+      case "15":
         dteSpecificFields.valorTotal = subTotalVentas;
         break;
 
-      case "09": // DCL - Documento Contable de Liquidación
+      case "09":
         dteSpecificFields.subTotal = subTotalVentas;
         dteSpecificFields.iva = iva;
-        dteSpecificFields.ivaPercibido = roundMoney(subTotalVentas * 0.02); // 2% fijo
-        dteSpecificFields.ivaComision = 0; // Calcular según reglas específicas
+        dteSpecificFields.ivaPercibido = roundMoney(subTotalVentas * 0.02);
+        dteSpecificFields.ivaComision = 0;
         break;
 
-      case "08": // CL - Comprobante de Liquidación
+      case "08":
         montoTotalOperacion = roundMoney(subTotalVentas + iva);
         dteSpecificFields.totalGravada = ventasGravadas;
         dteSpecificFields.totalExenta = ventasExentas;
         dteSpecificFields.totalNoSuj = 0;
-        dteSpecificFields.totalExportacion = 0; // Campo específico CL
-        dteSpecificFields.ivaPerci = iva; // ivaPerci (no ivaPerci1)
-        dteSpecificFields.total = montoTotalOperacion; // total (no totalPagar)
+        dteSpecificFields.totalExportacion = 0;
+        dteSpecificFields.ivaPerci = iva;
+        dteSpecificFields.total = montoTotalOperacion;
         break;
 
       default:
-        // Fallback a FC
         montoTotalOperacion = roundMoney(subTotalVentas + iva);
         totalPagar = roundMoney(montoTotalOperacion - reteRenta);
     }
@@ -411,12 +418,57 @@ export const useTaxCalculations = () => {
     };
   }, [calculateItemTax, roundMoney, getDteRules]);
 
-  // 🆕 Generar resumen de tributos actualizado
+  // --- Corrige para que la validación CR use el monto de retención
+  const validateCalculations = useCallback((calculations) => {
+    const errors = [];
+    const { tipoDte, subtotal, iva, totalPagar, montoTotalOperacion, reteRenta } = calculations;
+    const rules = getDteRules(tipoDte);
+
+    if (subtotal < 0) {
+      errors.push("El subtotal no puede ser negativo");
+    }
+
+    if (iva < 0) {
+      errors.push("El IVA no puede ser negativo");
+    }
+
+    // --- Para CR (07) valida sobre el campo reteRenta
+    let minValidation;
+    if (tipoDte === "07") {
+      minValidation = validateMinAmount(tipoDte, 0, { reteRenta });
+    } else {
+      minValidation = validateMinAmount(tipoDte, montoTotalOperacion);
+    }
+    if (!minValidation.isValid) {
+      errors.push(minValidation.error);
+    }
+
+    if (rules.iva.applies) {
+      const expectedIva = roundMoney(calculations.ventasGravadas * rules.iva.rate);
+      if (Math.abs(iva - expectedIva) > 0.01) {
+        errors.push(`El cálculo del IVA no coincide con el esperado para ${rules.name}`);
+      }
+    }
+
+    if (!rules.iva.applies && iva > 0) {
+      errors.push(`${rules.name} no debe tener IVA`);
+    }
+
+    if (tipoDte === "11" && montoTotalOperacion < 100) {
+      errors.push("Las facturas de exportación requieren un monto mínimo de $100.00");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }, [getDteRules, validateMinAmount, roundMoney]);
+
   const generateTributos = useCallback((calculations) => {
     const tributos = [];
     const { tipoDte, iva, reteRenta } = calculations;
     const rules = getDteRules(tipoDte);
-    
+
     if (iva > 0 && rules.iva.applies) {
       const ivaPercent = (rules.iva.rate * 100).toFixed(0);
       tributos.push({
@@ -425,17 +477,16 @@ export const useTaxCalculations = () => {
         valor: iva
       });
     }
-    
+
     if (reteRenta > 0 && rules.retencion.applies) {
       const retPercent = (rules.retencion.rate * 100).toFixed(0);
       tributos.push({
-        codigo: "D1", 
+        codigo: "D1",
         descripcion: `Retención ${retPercent}%`,
         valor: reteRenta
       });
     }
 
-    // Tributos específicos por tipo
     if (tipoDte === "09" && calculations.dteSpecificFields?.ivaPercibido > 0) {
       tributos.push({
         codigo: "C3",
@@ -443,82 +494,31 @@ export const useTaxCalculations = () => {
         valor: calculations.dteSpecificFields.ivaPercibido
       });
     }
-    
+
     return tributos;
   }, [getDteRules]);
 
-  // 🆕 Validar cálculos específicos por tipo DTE  
-  const validateCalculations = useCallback((calcs) => {
-    const errors = [];
-    const { tipoDte, subtotal, iva, totalPagar, montoTotalOperacion } = calcs;
-    const rules = getDteRules(tipoDte);
-    
-    // Validaciones básicas
-    if (subtotal < 0) {
-      errors.push("El subtotal no puede ser negativo");
-    }
-    
-    if (iva < 0) {
-      errors.push("El IVA no puede ser negativo");
-    }
-    
-    // Validación de monto mínimo específico
-    const minValidation = validateMinAmount(tipoDte, montoTotalOperacion);
-    if (!minValidation.isValid) {
-      errors.push(minValidation.error);
-    }
-
-    // Validaciones específicas por tipo
-    if (rules.iva.applies) {
-      const expectedIva = roundMoney(calcs.ventasGravadas * rules.iva.rate);
-      if (Math.abs(iva - expectedIva) > 0.01) {
-        errors.push(`El cálculo del IVA no coincide con el esperado para ${rules.name}`);
-      }
-    }
-
-    // Validar que tipos sin IVA no tengan IVA
-    if (!rules.iva.applies && iva > 0) {
-      errors.push(`${rules.name} no debe tener IVA`);
-    }
-
-    // Validaciones específicas por estructura
-    if (tipoDte === "11" && montoTotalOperacion < 100) { // FEX
-      errors.push("Las facturas de exportación requieren un monto mínimo de $100.00");
-    }
-
-    if (tipoDte === "07" && calcs.reteRenta < 0.01) { // CR
-      errors.push("Los comprobantes de retención deben tener al menos $0.01 de retención");
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }, [getDteRules, validateMinAmount, roundMoney]);
-
-  // 🆕 Función principal mejorada
   const calculate = useCallback((items, options = {}) => {
     const {
       descuentoGlobal = 0,
       aplicarRetencion = false,
       tipoDte = "01"
     } = options;
-    
+
     const results = calculateDocumentTotals(items, { descuentoGlobal, aplicarRetencion, tipoDte });
     const tributos = generateTributos(results);
     const validation = validateCalculations(results);
-    
+
     const finalResults = {
       ...results,
       tributos,
       validation
     };
-    
+
     setCalculations(finalResults);
     return finalResults;
   }, [calculateDocumentTotals, generateTributos, validateCalculations]);
 
-  // Función para formatear moneda (mantenida)
   const formatCurrency = useCallback((amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -528,34 +528,32 @@ export const useTaxCalculations = () => {
     }).format(amount);
   }, []);
 
-  // 🆕 Función para obtener el desglose específico por tipo DTE
   const getTaxBreakdown = useCallback((calcs) => {
     const breakdown = [];
     const { tipoDte, dteName } = calcs;
-    
+
     breakdown.push(`Tipo: ${dteName} (${tipoDte})`);
-    
+
     if (calcs.ventasGravadas > 0) {
       breakdown.push(`Ventas Gravadas: ${formatCurrency(calcs.ventasGravadas)}`);
     }
-    
+
     if (calcs.ventasExentas > 0) {
       breakdown.push(`Ventas Exentas: ${formatCurrency(calcs.ventasExentas)}`);
     }
-    
+
     if (calcs.iva > 0) {
       const rules = getDteRules(tipoDte);
       const percent = (rules.iva.rate * 100).toFixed(0);
       breakdown.push(`IVA (${percent}%): ${formatCurrency(calcs.iva)}`);
     }
-    
+
     if (calcs.reteRenta > 0) {
       const rules = getDteRules(tipoDte);
       const percent = (rules.retencion.rate * 100).toFixed(0);
       breakdown.push(`Retención (${percent}%): ${formatCurrency(calcs.reteRenta)}`);
     }
 
-    // Campos específicos por tipo
     if (calcs.dteSpecificFields) {
       Object.entries(calcs.dteSpecificFields).forEach(([field, value]) => {
         if (typeof value === 'number' && value > 0) {
@@ -563,11 +561,10 @@ export const useTaxCalculations = () => {
         }
       });
     }
-    
+
     return breakdown;
   }, [formatCurrency, getDteRules]);
 
-  // 🆕 Función para obtener información del tipo DTE
   const getDteInfo = useCallback((tipoDte) => {
     return getDteRules(tipoDte);
   }, [getDteRules]);
@@ -582,14 +579,14 @@ export const useTaxCalculations = () => {
     formatCurrency,
     getTaxBreakdown,
     roundMoney,
-    getDteInfo, // 🆕
-    getDteRules, // 🆕
-    validateMinAmount, // 🆕
+    getDteInfo,
+    getDteRules,
+    validateMinAmount,
     constants: {
       IVA_RATE,
       RENTA_RATE,
       MIN_RENTA_THRESHOLD,
-      DTE_RULES // 🆕 Exportar reglas para referencia
+      DTE_RULES
     }
   };
 };

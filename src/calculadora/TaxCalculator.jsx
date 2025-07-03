@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calculator, AlertCircle, CheckCircle, Info, DollarSign, Percent } from 'lucide-react';
 import { useTaxCalculations } from '../components/hooks/useTaxCalculations';
 
@@ -8,7 +8,9 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   const [calculations, setCalculations] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  // 🆕 Hook actualizado con soporte multi-DTE
+  const userChangedRetencion = useRef(false);
+
+  // Hook multi-DTE
   const {
     calculate,
     formatCurrency,
@@ -18,33 +20,55 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     constants
   } = useTaxCalculations();
 
-  // 🆕 Obtener información del tipo DTE actual
   const dteInfo = getDteInfo(tipoDte);
 
-  // Calcular automáticamente cuando cambien los datos
+  // Reset "user changed" si cambia tipo de documento
+  useEffect(() => {
+    userChangedRetencion.current = false;
+  }, [tipoDte]);
+
+  // Auto-marcar retención si el monto es MAYOR al mínimo, pero no si el usuario lo ha tocado
+  useEffect(() => {
+    if (!dteInfo.retencion.applies) return;
+    const min = dteInfo.retencion.minThreshold || 0;
+    let montoBase = 0;
+    if (items && items.length > 0) {
+      montoBase = items.reduce(
+        (sum, item) => sum + (item.cantidad * item.precioUni - (item.montoDescu || 0)),
+        0
+      ) - descuentoGlobal;
+      if (montoBase < 0) montoBase = 0;
+    }
+
+    if (!userChangedRetencion.current) {
+      if (montoBase > min && !aplicarRetencion) {
+        setAplicarRetencion(true);
+      }
+      if (montoBase <= min && aplicarRetencion) {
+        setAplicarRetencion(false);
+      }
+    }
+    // eslint-disable-next-line
+  }, [items, descuentoGlobal, tipoDte, dteInfo.retencion.minThreshold]);
+
+  // Calcular automáticamente cuando cambien los datos relevantes
   useEffect(() => {
     if (items && items.length > 0) {
       performCalculation();
     }
+    // eslint-disable-next-line
   }, [items, descuentoGlobal, aplicarRetencion, tipoDte]);
 
-  // 🆕 Función de cálculo actualizada
-  const performCalculation = useCallback(async () => {
+  // Función de cálculo principal
+  const performCalculation = useCallback(() => {
     setIsCalculating(true);
-    
     try {
-      // Usar el nuevo hook con soporte para tipoDte
       const results = calculate(items, {
         descuentoGlobal,
         aplicarRetencion,
-        tipoDte // 🆕 Pasar tipo DTE
+        tipoDte
       });
-
-      console.log(`🧮 Cálculo realizado para ${dteInfo.name}:`, results);
-      
       setCalculations(results);
-      
-      // Notificar al componente padre
       if (onCalculationChange) {
         onCalculationChange(results);
       }
@@ -54,37 +78,32 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     } finally {
       setIsCalculating(false);
     }
-  }, [items, descuentoGlobal, aplicarRetencion, tipoDte, calculate, onCalculationChange, dteInfo.name]);
+  }, [items, descuentoGlobal, aplicarRetencion, tipoDte, calculate, onCalculationChange]);
 
-  // Manejar cambio de descuento global
   const handleDescuentoChange = (value) => {
     const descuento = Math.max(0, parseFloat(value) || 0);
     setDescuentoGlobal(descuento);
   };
 
-  // Manejar cambio de retención
+  // Marcar como "tocó usuario" al cambiar el checkbox
   const handleRetencionChange = (checked) => {
+    userChangedRetencion.current = true;
     setAplicarRetencion(checked);
   };
 
-  // 🆕 Obtener el color del estado según las validaciones
   const getStatusColor = () => {
     if (!calculations) return 'gray';
     if (calculations.validation?.isValid) return 'green';
     return 'red';
   };
 
-  // 🆕 Renderizar campos específicos del tipo DTE
   const renderDteSpecificFields = () => {
     if (!calculations?.dteSpecificFields) return null;
-
     const specificFields = calculations.dteSpecificFields;
-    const fieldsToShow = Object.entries(specificFields).filter(([_, value]) => 
+    const fieldsToShow = Object.entries(specificFields).filter(([_, value]) =>
       typeof value === 'number' && value !== 0
     );
-
     if (fieldsToShow.length === 0) return null;
-
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="text-sm font-semibold text-blue-900 mb-3">
@@ -106,26 +125,19 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     );
   };
 
-  // 🆕 Renderizar advertencias específicas del tipo
   const renderDteWarnings = () => {
     if (!calculations) return null;
-
     const warnings = [];
-
-    // Validación de monto mínimo
     const totalAmount = calculations.montoTotalOperacion || calculations.dteSpecificFields?.valorTotal || 0;
     const minValidation = validateMinAmount(tipoDte, totalAmount);
-    
     if (!minValidation.isValid) {
       warnings.push({
         type: 'error',
         message: minValidation.error
       });
     }
-
-    // Advertencias específicas por tipo
     switch (tipoDte) {
-      case "11": // FEX
+      case "11":
         if (totalAmount > 0 && totalAmount < 100) {
           warnings.push({
             type: 'warning',
@@ -133,8 +145,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
           });
         }
         break;
-      
-      case "07": // CR
+      case "07":
         if (calculations.reteRenta < 0.01) {
           warnings.push({
             type: 'warning',
@@ -142,8 +153,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
           });
         }
         break;
-
-      case "14": // FSE
+      case "14":
         if (calculations.iva > 0) {
           warnings.push({
             type: 'error',
@@ -151,24 +161,22 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
           });
         }
         break;
-
-      case "04": // NR
+      case "04":
         warnings.push({
           type: 'info',
           message: 'Nota de remisión: documento no fiscal para traslado de bienes'
         });
         break;
-
-      case "15": // CD
+      case "15":
         warnings.push({
           type: 'info',
           message: 'Comprobante de donación: no genera obligaciones tributarias'
         });
         break;
+      default:
+        break;
     }
-
     if (warnings.length === 0) return null;
-
     return (
       <div className="space-y-2">
         {warnings.map((warning, index) => (
@@ -218,13 +226,13 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
             ? 'bg-red-100 text-red-800'
             : 'bg-gray-100 text-gray-600'
         }`}>
-          {isCalculating ? 'Calculando...' : 
-           calculations?.validation?.isValid ? 'Válido' : 
+          {isCalculating ? 'Calculando...' :
+           calculations?.validation?.isValid ? 'Válido' :
            calculations ? 'Con errores' : 'Sin calcular'}
         </div>
       </div>
 
-      {/* 🆕 Información del tipo DTE */}
+      {/* Info tipo DTE */}
       <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-medium text-gray-900 mb-3">
           Configuración para {dteInfo.name}
@@ -274,8 +282,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
-          {/* Aplicar retención - solo si aplica para el tipo */}
+          {/* Aplicar retención */}
           {dteInfo.retencion.applies && (
             <div className="flex items-center">
               <div className="flex items-center h-full">
@@ -294,8 +301,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
             </div>
           )}
         </div>
-
-        {/* Información de retención */}
+        {/* Info adicional de retención */}
         {dteInfo.retencion.applies && aplicarRetencion && dteInfo.retencion.minThreshold > 0 && (
           <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
             <Info className="w-4 h-4 inline mr-1" />
@@ -307,14 +313,10 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
       {/* Resultados de cálculo */}
       {calculations && (
         <div className="space-y-6">
-          {/* Advertencias específicas del tipo */}
           {renderDteWarnings()}
-
-          {/* Resumen principal */}
+          {/* Resumen */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Resumen de Cálculos</h3>
-            
-            {/* Cálculos base */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -332,7 +334,6 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
                   <span className="font-medium">{formatCurrency(calculations.subTotalVentas)}</span>
                 </div>
               </div>
-              
               <div className="space-y-2">
                 {calculations.ventasGravadas > 0 && (
                   <div className="flex justify-between">
@@ -360,7 +361,6 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
                 )}
               </div>
             </div>
-
             {/* Total */}
             <div className="border-t border-gray-300 pt-4">
               <div className="flex justify-between items-center">
@@ -369,20 +369,18 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
                 </span>
                 <span className="text-2xl font-bold text-blue-600">
                   {formatCurrency(
-                    calculations.totalPagar || 
-                    calculations.dteSpecificFields?.valorTotal || 
-                    calculations.dteSpecificFields?.totalIVAretenido || 
+                    calculations.totalPagar ||
+                    calculations.dteSpecificFields?.valorTotal ||
+                    calculations.dteSpecificFields?.totalIVAretenido ||
                     0
                   )}
                 </span>
               </div>
             </div>
           </div>
-
-          {/* Campos específicos del tipo DTE */}
+          {/* Campos específicos */}
           {renderDteSpecificFields()}
-
-          {/* Desglose de tributos */}
+          {/* Tributos */}
           {calculations.tributos && calculations.tributos.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-blue-900 mb-3">Tributos Aplicados</h4>
@@ -400,8 +398,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
               </div>
             </div>
           )}
-
-          {/* Errores de validación */}
+          {/* Errores */}
           {calculations.validation && !calculations.validation.isValid && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-red-900 mb-3 flex items-center gap-2">
@@ -417,8 +414,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
               </ul>
             </div>
           )}
-
-          {/* Estado válido */}
+          {/* Válido */}
           {calculations.validation && calculations.validation.isValid && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center gap-2">
@@ -432,12 +428,12 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
         </div>
       )}
 
-      {/* Estado sin datos */}
+      {/* Sin datos */}
       {(!calculations || !items || items.length === 0) && (
         <div className="text-center py-8 text-gray-500">
           <Calculator className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p className="text-sm">
-            {items && items.length === 0 
+            {items && items.length === 0
               ? 'Agregue productos para calcular impuestos'
               : 'Calculando impuestos...'}
           </p>
