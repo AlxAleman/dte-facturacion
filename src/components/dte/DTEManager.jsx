@@ -1,5 +1,5 @@
 // src/components/dte/DTEManager.jsx
-// IMPORTS CORREGIDOS según tu estructura final
+// INTEGRACIÓN COMPLETA CON VALIDACIÓN REAL
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -17,15 +17,19 @@ import {
 } from 'lucide-react';
 
 // Imports según tu estructura actual ✅
-import DteForm from './DteForm';                                    // ✅ Mismo directorio
-import TaxCalculator from '../../calculadora/TaxCalculator';        // ✅ Tu carpeta calculadora  
+import DteForm from './DteForm';                                    
+import TaxCalculator from '../../calculadora/TaxCalculator';        
 import SignatureQRManager from '../../calculadora/SignatureQRManager';
-import FacturaPreview from './FacturaPreview';                      // ✅ Nuevo import para preview
-import { useTaxCalculations } from '../hooks/useTaxCalculations';   // ✅ Tu hooks ACTUALIZADO
-import { useQRGenerator } from '../hooks/useQRGenerator';           // ✅ Tu hooks  
-import { schemaValidator } from '../services/schemaValidator';      // ✅ Tu services
-import { apiService } from '../services/apiService';               // ✅ Tu services
-import { CATALOGS, getCatalogValue } from '../data/catalogs';       // ✅ Tu data
+import FacturaPreview from './FacturaPreview';                      
+import { useTaxCalculations } from '../hooks/useTaxCalculations';   
+import { useQRGenerator } from '../hooks/useQRGenerator';           
+
+// 🆕 NUEVO: Importar el validador real en lugar del manual
+import { realDTEValidator } from '../../services/realDTEValidator';    // ✅ NUEVO VALIDADOR
+import ValidationIndicator from '../services/ValidationIndicator'; // ✅ COMPONENTE INDICADOR
+
+import { apiService } from '../services/apiService';               
+import { CATALOGS, getCatalogValue } from '../data/catalogs';       
 
 const DTEManager = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -35,7 +39,11 @@ const DTEManager = () => {
   const [calculations, setCalculations] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
+  
+  // 🆕 NUEVO: Estado para validación real
   const [validationResult, setValidationResult] = useState(null);
+  const [isValidationReady, setIsValidationReady] = useState(false);
+  
   const [environment, setEnvironment] = useState('test');
 
   // Referencias para preview
@@ -52,18 +60,24 @@ const DTEManager = () => {
     { number: 5, title: 'Envío', icon: Send }
   ];
 
-  // Cargar esquemas al inicializar
+  // 🆕 NUEVO: Inicializar validador real al cargar
   useEffect(() => {
-    const initializeSchemas = async () => {
+    const initializeRealValidator = async () => {
+      console.log('🔧 Inicializando validador real con esquemas oficiales...');
       try {
-        await schemaValidator.loadAllSchemas();
-        console.log('Esquemas cargados correctamente');
+        const result = await realDTEValidator.initialize();
+        if (result.success) {
+          console.log('✅ Validador real inicializado:', result.message);
+          setIsValidationReady(true);
+        } else {
+          console.error('❌ Error inicializando validador:', result.message);
+        }
       } catch (error) {
-        console.error('Error al cargar esquemas:', error);
+        console.error('❌ Error crítico inicializando validador:', error);
       }
     };
 
-    initializeSchemas();
+    initializeRealValidator();
   }, []);
 
   // Configurar ambiente de API
@@ -87,15 +101,21 @@ const DTEManager = () => {
     return getDteInfo(tipoDte);
   }, [getCurrentDteType, getDteInfo]);
 
-  // Manejar datos del formulario DTE
+  // 🆕 NUEVO: Manejar resultado de validación
+  const handleValidationChange = useCallback((result) => {
+    setValidationResult(result);
+    console.log('📊 Resultado validación:', result.isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    if (!result.isValid && result.errors?.length > 0) {
+      console.log('🔍 Errores encontrados:', result.errors.slice(0, 3));
+    }
+  }, []);
+
+  // Manejar datos del formulario DTE - 🆕 ACTUALIZADO
   const handleDTEDataChange = useCallback((data) => {
     setDteData(data);
-
-    // Validar documento cuando cambie
-    if (data && data.identificacion?.tipoDocumento) {
-      const validation = schemaValidator.validateDocumentByType(data);
-      setValidationResult(validation);
-    }
+    
+    // La validación se maneja automáticamente por el ValidationIndicator
+    // No necesitamos validar manualmente aquí
   }, []);
 
   // 🆕 Manejar cambios en los cálculos - ACTUALIZADO
@@ -195,10 +215,24 @@ const DTEManager = () => {
     setQrData(qr);
   }, []);
 
-  // Enviar DTE
+  // 🆕 NUEVO: Validar antes de enviar
+  const validateBeforeSubmit = () => {
+    if (!validationResult || !validationResult.isValid) {
+      return false;
+    }
+    return true;
+  };
+
+  // Enviar DTE - 🆕 ACTUALIZADO con validación
   const handleSubmitDTE = async () => {
     if (!signedDocument) {
       alert('Debe firmar el documento antes de enviarlo');
+      return;
+    }
+
+    // 🆕 NUEVO: Validar antes de enviar
+    if (!validateBeforeSubmit()) {
+      alert('El documento contiene errores de validación. Por favor revise el documento antes de enviarlo.');
       return;
     }
 
@@ -420,6 +454,24 @@ const DTEManager = () => {
             </div>
           </div>
         </div>
+
+        {/* 🆕 NUEVO: Indicador de validación principal */}
+        {dteData && isValidationReady && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-blue-600" />
+              Estado de Validación - Esquemas Oficiales MH
+            </h3>
+            <ValidationIndicator 
+              jsonData={dteData}
+              tipoDte={getCurrentDteType()}
+              showDetails={true}
+              onValidationChange={handleValidationChange}
+              className="w-full"
+            />
+          </div>
+        )}
+
         {renderStepIndicator()}
       </div>
 
@@ -434,39 +486,69 @@ const DTEManager = () => {
                 onDataChange={handleDTEDataChange}
                 initialData={dteData}
               />
-              {validationResult && (
-                <div className={`p-4 rounded-lg ${validationResult.isValid
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-red-50 border border-red-200'
-                  }`}>
-                  <div className="flex items-center gap-2">
-                    {validationResult.isValid ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-red-600" />
-                    )}
-                    <span className={`font-medium ${validationResult.isValid ? 'text-green-800' : 'text-red-800'
-                      }`}>
-                      {validationResult.message}
+              
+              {/* 🆕 NUEVO: Mostrar validación detallada solo si hay errores */}
+              {isValidationReady && validationResult && !validationResult.isValid && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <span className="font-medium text-red-800">
+                      Errores de Validación Encontrados
                     </span>
                   </div>
+                  
                   {validationResult.errors && validationResult.errors.length > 0 && (
-                    <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
-                      {validationResult.errors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
+                    <div className="space-y-2">
+                      <p className="text-sm text-red-700 mb-2">
+                        Se encontraron {validationResult.errors.length} error(es) según el esquema oficial del MH:
+                      </p>
+                      <ul className="text-sm text-red-700 space-y-1">
+                        {validationResult.errors.slice(0, 5).map((error, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-red-500 mt-1">•</span>
+                            <span>
+                              {typeof error === 'string' ? error : error.message}
+                            </span>
+                          </li>
+                        ))}
+                        {validationResult.errors.length > 5 && (
+                          <li className="text-red-600 font-medium">
+                            ... y {validationResult.errors.length - 5} errores más
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {validationResult.warnings && validationResult.warnings.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-red-200">
+                      <p className="text-sm text-orange-700 mb-1">
+                        Advertencias ({validationResult.warnings.length}):
+                      </p>
+                      <ul className="text-sm text-orange-700 space-y-1">
+                        {validationResult.warnings.slice(0, 3).map((warning, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-orange-500 mt-1">•</span>
+                            <span>{warning}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}
-              {/* Botón continuar responsive */}
+
+              {/* Botón continuar responsive - 🆕 ACTUALIZADO */}
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setActiveStep(2)}
                   disabled={!dteData || (validationResult && !validationResult.isValid)}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continuar a Cálculos
+                  {validationResult && !validationResult.isValid 
+                    ? 'Corregir Errores para Continuar'
+                    : 'Continuar a Cálculos'
+                  }
                 </button>
               </div>
             </div>
@@ -486,6 +568,14 @@ const DTEManager = () => {
                   {getCurrentDteInfo().minAmount > 0 && (
                     <div>• <strong>Monto mínimo:</strong> ${getCurrentDteInfo().minAmount.toFixed(2)}</div>
                   )}
+                  {/* 🆕 NUEVO: Estado de validación en cálculos */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-blue-200">
+                    <ValidationIndicator 
+                      jsonData={dteData}
+                      tipoDte={getCurrentDteType()}
+                      className="text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -503,7 +593,7 @@ const DTEManager = () => {
                 </button>
                 <button
                   onClick={() => setActiveStep(3)}
-                  disabled={!calculations || (calculations.validation && !calculations.validation.isValid)}
+                  disabled={!calculations || (calculations.validation && !calculations.validation.isValid) || (validationResult && !validationResult.isValid)}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continuar a Firma
@@ -515,6 +605,24 @@ const DTEManager = () => {
           {/* Paso 3: Firma y QR */}
           {activeStep === 3 && (
             <div className="space-y-6">
+              {/* 🆕 NUEVO: Validación pre-firma */}
+              {isValidationReady && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Validación Pre-Firma</h4>
+                  <ValidationIndicator 
+                    jsonData={dteData}
+                    tipoDte={getCurrentDteType()}
+                    showDetails={false}
+                    className="text-sm"
+                  />
+                  {validationResult && !validationResult.isValid && (
+                    <p className="text-sm text-red-600 mt-2">
+                      ⚠️ Se recomienda corregir los errores antes de firmar
+                    </p>
+                  )}
+                </div>
+              )}
+
               <SignatureQRManager
                 dteData={dteData}
                 onDocumentSigned={handleDocumentSigned}
@@ -546,6 +654,20 @@ const DTEManager = () => {
                   <Eye className="w-5 h-5 text-blue-600" />
                   Revisión del Documento - {getCurrentDteInfo().name}
                 </h3>
+
+                {/* 🆕 NUEVO: Validación final antes de envío */}
+                {isValidationReady && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-3">Validación Final</h4>
+                    <ValidationIndicator 
+                      jsonData={signedDocument || dteData}
+                      tipoDte={getCurrentDteType()}
+                      showDetails={true}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
                 <div className="mb-6">
                   <p className="text-gray-600 mb-4">
                     Revise cuidadosamente todos los datos antes de enviar el documento al Ministerio de Hacienda.
@@ -594,10 +716,13 @@ const DTEManager = () => {
                 </button>
                 <button
                   onClick={() => setActiveStep(5)}
-                  disabled={!signedDocument}
+                  disabled={!signedDocument || (validationResult && !validationResult.isValid)}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continuar a Envío
+                  {validationResult && !validationResult.isValid 
+                    ? 'Corregir Errores para Enviar'
+                    : 'Continuar a Envío'
+                  }
                 </button>
               </div>
             </div>
@@ -611,6 +736,27 @@ const DTEManager = () => {
                   <Send className="w-5 h-5 text-blue-600" />
                   Enviar DTE al Ministerio de Hacienda
                 </h3>
+
+                {/* 🆕 NUEVO: Validación pre-envío */}
+                {isValidationReady && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-3">Validación Pre-Envío</h4>
+                    <ValidationIndicator 
+                      jsonData={signedDocument || dteData}
+                      tipoDte={getCurrentDteType()}
+                      showDetails={true}
+                      className="w-full"
+                    />
+                    {validationResult && !validationResult.isValid && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                        <p className="text-sm text-red-700 font-medium">
+                          ⚠️ El documento contiene errores. Se recomienda corregirlos antes del envío.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Resumen del Documento</h4>
@@ -627,6 +773,22 @@ const DTEManager = () => {
                         <dt className="text-gray-600">Total a Pagar:</dt>
                         <dd className="text-gray-900 font-semibold">
                           ${(dteData?.resumen?.totalPagar || dteData?.resumen?.valorTotal || 0).toFixed(2)}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-600">Estado Validación:</dt>
+                        <dd>
+                          {validationResult ? (
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              validationResult.isValid 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {validationResult.isValid ? '✓ Válido' : '✗ Con errores'}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500">Pendiente</span>
+                          )}
                         </dd>
                       </div>
                       <div className="flex justify-between">
@@ -651,7 +813,10 @@ const DTEManager = () => {
                       ) : (
                         <>
                           <Send className="w-4 h-4 inline mr-2" />
-                          Enviar DTE
+                          {validationResult && !validationResult.isValid 
+                            ? 'Enviar (Con Advertencias)'
+                            : 'Enviar DTE'
+                          }
                         </>
                       )}
                     </button>
@@ -714,6 +879,48 @@ const DTEManager = () => {
         
         {/* Panel lateral */}
         <div className="space-y-6 mt-8 lg:mt-0">
+          {/* 🆕 NUEVO: Panel de validación en el sidebar */}
+          {dteData && isValidationReady && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado de Validación</h3>
+              <ValidationIndicator 
+                jsonData={dteData}
+                tipoDte={getCurrentDteType()}
+                showDetails={false}
+                className="w-full"
+              />
+              
+              {validationResult && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="text-xs text-gray-600 space-y-1">
+                    {validationResult.isValid ? (
+                      <>
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="font-medium">Documento válido</span>
+                        </div>
+                        <p>✓ Cumple con esquema oficial MH</p>
+                        <p>✓ Estructura correcta</p>
+                        <p>✓ Campos requeridos completos</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="font-medium">{validationResult.errors?.length || 0} error(es)</span>
+                        </div>
+                        {validationResult.warnings?.length > 0 && (
+                          <p className="text-yellow-600">⚠️ {validationResult.warnings.length} advertencia(s)</p>
+                        )}
+                        <p className="text-gray-500">Revisar paso 1 para detalles</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 🆕 Información del DTE actual */}
           {dteData && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -833,14 +1040,14 @@ const DTEManager = () => {
                   {getCurrentDteInfo().allowNegative && (
                     <li>• ⚠️ Permite valores negativos</li>
                   )}
-                  <li>• Validación: Esquema oficial MH</li>
+                  <li>• <strong>Validación:</strong> {isValidationReady ? '✅ Esquema oficial MH' : '⏳ Cargando...'}</li>
                 </>
               ) : (
                 <>
                   <li>• Seleccione el tipo de DTE en el formulario</li>
                   <li>• Cada tipo tiene reglas específicas</li>
                   <li>• Los cálculos se ajustan automáticamente</li>
-                  <li>• Validación contra esquemas oficiales</li>
+                  <li>• <strong>Validación:</strong> {isValidationReady ? '✅ Lista' : '⏳ Inicializando...'}</li>
                 </>
               )}
               <li>• Ambiente: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
@@ -853,3 +1060,4 @@ const DTEManager = () => {
 };
 
 export default DTEManager;
+                

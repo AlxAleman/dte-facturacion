@@ -41,7 +41,6 @@ G:\PROJECTS\dte-facturacion
 │   │   │   └── ReceptorForm.jsx
 │   │   ├── hooks
 │   │   │   ├── useAuth.js
-│   │   │   ├── useDteSchema.js
 │   │   │   ├── useQRGenerator.js
 │   │   │   └── useTaxCalculations.js
 │   │   ├── layout

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Plus, Minus, Trash2, FileText } from 'lucide-react';
 import { CATALOGS, getCatalogValue } from '../data/catalogs';
 
+// 🆕 ÚNICA LÍNEA NUEVA - Agregar validación
+import ValidationIndicator from '../services/ValidationIndicator';
+
 // Función helper para generar UUID
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -215,6 +218,16 @@ const DteForm = ({ onDataChange, initialData }) => {
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
         Formulario de Documento Tributario Electrónico
       </h2>
+
+      {/* 🆕 ÚNICA SECCIÓN NUEVA - Indicador de validación */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <h3 className="text-sm font-medium text-gray-700 mb-2">Estado de Validación</h3>
+        <ValidationIndicator 
+          jsonData={formData}
+          tipoDte={formData.identificacion.tipoDte}
+          className="text-sm"
+        />
+      </div>
 
       {/* 🆕 SELECTOR DE TIPO DTE - NUEVO */}
       <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">

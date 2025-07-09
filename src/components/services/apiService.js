@@ -2,7 +2,7 @@
 // API Service para tu estructura específica
 
 import { digitalSignatureService } from './digitalSignature';
-import { schemaValidator } from './schemaValidator';
+import { realDTEValidator } from '../../services/realDTEValidator';
 
 class ApiService {
   constructor() {
@@ -162,8 +162,12 @@ class ApiService {
   // Enviar DTE
   async sendDTE(dteData) {
     try {
-      // Validar documento antes de enviar
-      const validation = schemaValidator.validateDocumentByType(dteData);
+      // 🆕 CORREGIDO: Usar realDTEValidator en lugar de schemaValidator
+      if (!realDTEValidator.isInitialized) {
+        await realDTEValidator.initialize();
+      }
+      
+      const validation = realDTEValidator.validateDocument(dteData, dteData.identificacion?.tipoDte);
       if (!validation.isValid) {
         return {
           success: false,
