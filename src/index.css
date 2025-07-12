@@ -11,3 +11,53 @@
   100% { transform: translateX(0);}
 }
 .animate-shake { animation: shake 0.3s; }
+
+/* Estilos para impresión del PDF */
+@media print {
+  /* Ocultar elementos que no queremos imprimir */
+  nav, 
+  .sidebar, 
+  .navbar, 
+  button, 
+  .bg-gray-100,
+  .bg-white.rounded-lg.border.border-gray-200,
+  .flex.gap-2,
+  .flex.flex-col.sm\\:flex-row.gap-3 {
+    display: none !important;
+  }
+  
+  /* Mostrar solo el componente FacturaPreview */
+  .print-pdf {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    transform: none !important;
+    scale: 1 !important;
+    max-width: none !important;
+  }
+  
+  .print-pdf * {
+    visibility: visible !important;
+  }
+  
+  /* Resetear estilos de impresión */
+  @page {
+    margin: 0.5in;
+    size: A4;
+  }
+  
+  /* Asegurar que el contenido sea visible */
+  body {
+    background: white !important;
+  }
+  
+  /* Ocultar contenedores de botones */
+  .flex.flex-col.sm\\:flex-row.gap-3.mb-4 {
+    display: none !important;
+  }
+}

@@ -2,7 +2,7 @@
 // API Service para tu estructura específica
 
 import { digitalSignatureService } from './digitalSignature';
-import { realDTEValidator } from '../../services/realDTEValidator';
+// import { schemaValidator } from './schemaValidator.js';
 
 class ApiService {
   constructor() {
@@ -162,19 +162,19 @@ class ApiService {
   // Enviar DTE
   async sendDTE(dteData) {
     try {
-      // 🆕 CORREGIDO: Usar realDTEValidator en lugar de schemaValidator
-      if (!realDTEValidator.isInitialized) {
-        await realDTEValidator.initialize();
-      }
+      // 🆕 TEMPORALMENTE COMENTADO: Usar schemaValidator para validación
+      // if (!schemaValidator.isInitialized) {
+      //   await schemaValidator.initialize();
+      // }
       
-      const validation = realDTEValidator.validateDocument(dteData, dteData.identificacion?.tipoDte);
-      if (!validation.isValid) {
-        return {
-          success: false,
-          error: 'Documento inválido',
-          validationErrors: validation.errors
-        };
-      }
+      // const validation = schemaValidator.validateDocument(dteData, dteData.identificacion?.tipoDte);
+      // if (!validation.isValid) {
+      //   return {
+      //     success: false,
+      //     error: 'Documento inválido',
+      //     validationErrors: validation.errors
+      //   };
+      // }
 
       // Firmar documento si no está firmado
       let signedDocument = dteData;

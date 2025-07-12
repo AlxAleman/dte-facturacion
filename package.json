@@ -22,7 +22,6 @@
     "react-hot-toast": "^2.5.2",
     "react-qr-code": "^2.0.16",
     "react-router-dom": "^7.6.3",
-    "react-to-print": "^3.1.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

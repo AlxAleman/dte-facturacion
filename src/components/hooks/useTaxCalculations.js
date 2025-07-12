@@ -1,5 +1,6 @@
 // src/hooks/useTaxCalculations.js
 import { useState, useEffect, useCallback } from 'react';
+import { numberToWords } from '../../utils/numberToWords';
 
 export const useTaxCalculations = () => {
   const [calculations, setCalculations] = useState({
@@ -309,7 +310,7 @@ export const useTaxCalculations = () => {
     let reteRenta = 0;
     let montoTotalOperacion = 0;
     let totalPagar = 0;
-    const dteSpecificFields = {};
+    let dteSpecificFields = {};
 
     if (rules.iva.applies) {
       iva = roundMoney(ventasGravadas * rules.iva.rate);
@@ -326,11 +327,43 @@ export const useTaxCalculations = () => {
       case "01":
         montoTotalOperacion = roundMoney(subTotalVentas + iva);
         totalPagar = roundMoney(montoTotalOperacion - reteRenta);
-        dteSpecificFields.totalGravada = ventasGravadas;
-        dteSpecificFields.totalExenta = ventasExentas;
-        dteSpecificFields.totalNoSuj = 0;
-        dteSpecificFields.totalIva = iva;
-        dteSpecificFields.ivaRete1 = reteRenta;
+        
+        // 🆕 NUEVO: Generar todos los campos requeridos del resumen según esquema
+        dteSpecificFields = {
+          // Campos básicos
+          totalNoSuj: 0,
+          totalExenta: ventasExentas,
+          totalGravada: ventasGravadas,
+          subTotalVentas: subTotalVentas,
+          
+          // Descuentos
+          descuNoSuj: 0,
+          descuExenta: 0,
+          descuGravada: totalDescuentos,
+          porcentajeDescuento: subtotal > 0 ? (totalDescuentos / subtotal) * 100 : 0,
+          totalDescu: totalDescuentos,
+          
+          // Tributos
+          tributos: iva > 0 ? [{
+            codigo: "20",
+            descripcion: "Impuesto al Valor Agregado 13%",
+            valor: iva
+          }] : [],
+          
+          // Totales
+          subTotal: subtotal,
+          ivaRete1: reteRenta,
+          reteRenta: reteRenta,
+          montoTotalOperacion: montoTotalOperacion,
+          totalNoGravado: 0,
+          totalPagar: totalPagar,
+          totalLetras: numberToWords(totalPagar), // ✅ Campo requerido con conversión a palabras
+          totalIva: iva,
+          saldoFavor: 0,
+          condicionOperacion: 1,
+          pagos: [],
+          numPagoElectronico: ""
+        };
         break;
 
       case "03":
@@ -353,10 +386,77 @@ export const useTaxCalculations = () => {
         break;
 
       case "11":
-        montoTotalOperacion = subTotalVentas;
-        totalPagar = subTotalVentas;
-        dteSpecificFields.totalGravada = ventasGravadas;
-        break;
+        // 🆕 NUEVO: Cálculos específicos para Factura de Exportación
+        montoTotalOperacion = roundMoney(subTotalVentas);
+        totalPagar = roundMoney(montoTotalOperacion);
+        
+        dteSpecificFields = {
+          totalGravada: ventasGravadas,
+          descuento: totalDescuentos,
+          porcentajeDescuento: subtotal > 0 ? (totalDescuentos / subtotal) * 100 : 0,
+          totalDescu: totalDescuentos,
+          seguro: 0,
+          flete: 0,
+          montoTotalOperacion: montoTotalOperacion,
+          totalNoGravado: 0, // Exportaciones no tienen IVA
+          totalPagar: totalPagar,
+          totalLetras: numberToWords(totalPagar),
+          condicionOperacion: 1, // 1 = Contado
+          pagos: [{
+            codigo: "01",
+            montoPago: totalPagar,
+            referencia: null,
+            plazo: null,
+            periodo: null
+          }],
+          codIncoterms: "FOB",
+          descIncoterms: "Free On Board",
+          numPagoElectronico: null,
+                  observaciones: "Factura de exportación"
+      };
+      break;
+
+    case "14":
+      // 🆕 NUEVO: Cálculos específicos para Factura de Sujeto Excluido
+      montoTotalOperacion = roundMoney(subTotalVentas);
+      totalPagar = roundMoney(montoTotalOperacion);
+      
+      dteSpecificFields = {
+        totalCompra: ventasGravadas,
+        descu: totalDescuentos,
+        totalDescu: totalDescuentos,
+        subTotal: subtotal,
+        ivaRete1: 0, // Sujetos excluidos no tienen IVA
+        reteRenta: 0,
+        totalPagar: totalPagar,
+        totalLetras: numberToWords(totalPagar),
+        condicionOperacion: 1, // 1 = Contado, 2 = Crédito, 3 = Mixto
+        pagos: [{
+          codigo: "01", // 01 = Efectivo, 02 = Cheque, 03 = Tarjeta, etc.
+          montoPago: totalPagar,
+          referencia: null,
+          plazo: null,
+          periodo: null
+        }],
+        observaciones: "Factura de sujeto excluido"
+      };
+      break;
+
+    case "15":
+      // 🆕 NUEVO: Cálculos específicos para Comprobante de Donación
+      montoTotalOperacion = roundMoney(subTotalVentas);
+      totalPagar = roundMoney(montoTotalOperacion);
+      
+      dteSpecificFields = {
+        valorTotal: ventasGravadas,
+        totalLetras: numberToWords(totalPagar),
+        pagos: [{
+          codigo: "99", // 99 = Otros
+          montoPago: totalPagar,
+          referencia: "Donación"
+        }]
+      };
+      break;
 
       case "07":
         // Retención directa para CR
@@ -379,10 +479,14 @@ export const useTaxCalculations = () => {
         break;
 
       case "09":
+        dteSpecificFields.valorOperaciones = subTotalVentas;
         dteSpecificFields.subTotal = subTotalVentas;
         dteSpecificFields.iva = iva;
+        dteSpecificFields.montoSujetoPercepcion = subTotalVentas;
         dteSpecificFields.ivaPercibido = roundMoney(subTotalVentas * 0.02);
+        dteSpecificFields.comision = 0;
         dteSpecificFields.ivaComision = 0;
+        dteSpecificFields.liquidoApagar = roundMoney(subTotalVentas - dteSpecificFields.ivaPercibido);
         break;
 
       case "08":

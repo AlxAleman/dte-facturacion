@@ -24,12 +24,46 @@ G:\PROJECTS\dte-facturacion
 │   │   ├── auth
 │   │   │   ├── AuthContext.jsx
 │   │   │   └── LoginForm.jsx
+│   │   ├── config
+│   │   │   └── EmpresaConfig.jsx
 │   │   ├── context
 │   │   │   └── AuthContext.jsx
 │   │   ├── data
+│   │   │   ├── actividadesEconomicas
+│   │   │   ├── catalogoActividadEconomica.js
+│   │   │   ├── catalogoGeneral.js
+│   │   │   ├── catalogoPaises.js
 │   │   │   └── catalogs.js
 │   │   ├── dte
+│   │   │   ├── forms
+│   │   │   │   ├── shared
+│   │   │   │   │   ├── CuerpoDocumento.jsx
+│   │   │   │   │   ├── DocumentInfoSection.jsx
+│   │   │   │   │   ├── EmisorInfo.jsx
+│   │   │   │   │   ├── EmisorSection.jsx
+│   │   │   │   │   ├── ProductItemsSection.jsx
+│   │   │   │   │   ├── ReceptorForm.jsx
+│   │   │   │   │   └── ValidationSummary.jsx
+│   │   │   │   ├── types
+│   │   │   │   │   ├── ComprobanteCreditoFiscal.jsx
+│   │   │   │   │   ├── ComprobanteDonacion.jsx
+│   │   │   │   │   ├── ComprobanteLiquidacion.jsx
+│   │   │   │   │   ├── ComprobanteRetencion.jsx
+│   │   │   │   │   ├── DocumentoContableLiquidacion.jsx
+│   │   │   │   │   ├── FacturaConsumidor.jsx
+│   │   │   │   │   ├── FacturaExportacion.jsx
+│   │   │   │   │   ├── FacturaSujetoExcluido.jsx
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── NotaCredito.jsx
+│   │   │   │   │   ├── NotaDebito.jsx
+│   │   │   │   │   └── NotaRemision.jsx
+│   │   │   │   ├── DteFormContainer.export.js
+│   │   │   │   ├── DteFormContainer.jsx
+│   │   │   │   ├── index.js
+│   │   │   │   ├── README.md
+│   │   │   │   └── TestDteFormContainer.jsx
 │   │   │   ├── DteContingency.jsx
+│   │   │   ├── DteFinalReview.jsx
 │   │   │   ├── DteForm.jsx
 │   │   │   ├── DteHistory.jsx
 │   │   │   ├── DteInvalidation.jsx
@@ -42,6 +76,7 @@ G:\PROJECTS\dte-facturacion
 │   │   ├── hooks
 │   │   │   ├── useAuth.js
 │   │   │   ├── useQRGenerator.js
+│   │   │   ├── useSchemaValidation.js
 │   │   │   └── useTaxCalculations.js
 │   │   ├── layout
 │   │   │   ├── Navbar.jsx
@@ -67,19 +102,30 @@ G:\PROJECTS\dte-facturacion
 │   │   ├── services
 │   │   │   ├── apiService.js
 │   │   │   ├── digitalSignature.js
-│   │   │   └── schemaValidator.js
+│   │   │   ├── SchemaValidationDocs.jsx
+│   │   │   └── SchemaValidationIndicator.jsx
 │   │   └── vercel.json
 │   ├── config
+│   │   ├── empresa.js
 │   │   └── index.js
+│   ├── services
+│   │   ├── schemaValidator.cjs
+│   │   └── schemaValidator.js
 │   ├── utils
-│   │   └── index.js
+│   │   ├── geoCatalogs.js
+│   │   ├── index.js
+│   │   └── numberToWords.js
 │   ├── App.css
 │   ├── App.jsx
 │   ├── fakeReceivers.js
 │   ├── index.css
-│   └── main.jsx
+│   ├── main.jsx
+│   ├── test-json-completeness.js
+│   └── test-schema-validator.cjs
 ├── .env
 ├── .gitignore
+├── COMANDOS-CERRAR-PUERTOS.md
+├── CONFIGURACION_EMPRESA.md
 ├── eslint.config.js
 ├── index.html
 ├── package-lock.json
