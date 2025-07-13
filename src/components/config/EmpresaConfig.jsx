@@ -118,9 +118,9 @@ const EmpresaConfig = ({ onConfigChange }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
           <Building className="w-6 h-6 mr-2 text-blue-600" />
           Configuración de Empresa
         </h2>
@@ -178,13 +178,13 @@ const EmpresaConfig = ({ onConfigChange }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Datos Principales */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
             <FileText className="w-5 h-5 mr-2 text-blue-600" />
             Datos Principales
           </h3>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nombre de la Empresa *
             </label>
             <input
@@ -201,7 +201,7 @@ const EmpresaConfig = ({ onConfigChange }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               NIT *
             </label>
             <input
@@ -218,7 +218,7 @@ const EmpresaConfig = ({ onConfigChange }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nombre Comercial
             </label>
             <input
@@ -232,7 +232,7 @@ const EmpresaConfig = ({ onConfigChange }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Descripción de Actividad
             </label>
             <textarea
@@ -248,7 +248,7 @@ const EmpresaConfig = ({ onConfigChange }) => {
 
         {/* Información de Contacto */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
             <Phone className="w-5 h-5 mr-2 text-blue-600" />
             Información de Contacto
           </h3>

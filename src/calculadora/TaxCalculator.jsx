@@ -105,17 +105,17 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     );
     if (fieldsToShow.length === 0) return null;
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-blue-900 mb-3">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">
           Campos Específicos - {dteInfo.name}
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {fieldsToShow.map(([field, value]) => (
             <div key={field} className="flex justify-between items-center">
-              <span className="text-sm text-blue-700 capitalize">
+              <span className="text-sm text-blue-700 dark:text-blue-300 capitalize">
                 {field.replace(/([A-Z])/g, ' $1').toLowerCase()}:
               </span>
-              <span className="font-medium text-blue-900">
+              <span className="font-medium text-blue-900 dark:text-blue-200">
                 {formatCurrency(value)}
               </span>
             </div>
@@ -126,57 +126,9 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   };
 
   const renderDteWarnings = () => {
-    if (!calculations) return null;
-    const warnings = [];
-    const totalAmount = calculations.montoTotalOperacion || calculations.dteSpecificFields?.valorTotal || 0;
-    const minValidation = validateMinAmount(tipoDte, totalAmount);
-    if (!minValidation.isValid) {
-      warnings.push({
-        type: 'error',
-        message: minValidation.error
-      });
-    }
-    switch (tipoDte) {
-      case "11":
-        if (totalAmount > 0 && totalAmount < 100) {
-          warnings.push({
-            type: 'warning',
-            message: 'Las facturas de exportación requieren un monto mínimo de $100.00'
-          });
-        }
-        break;
-      case "07":
-        if (calculations.reteRenta < 0.01) {
-          warnings.push({
-            type: 'warning',
-            message: 'Los comprobantes de retención deben tener al menos $0.01 de retención'
-          });
-        }
-        break;
-      case "14":
-        if (calculations.iva > 0) {
-          warnings.push({
-            type: 'error',
-            message: 'Las facturas de sujeto excluido no deben tener IVA'
-          });
-        }
-        break;
-      case "04":
-        warnings.push({
-          type: 'info',
-          message: 'Nota de remisión: documento no fiscal para traslado de bienes'
-        });
-        break;
-      case "15":
-        warnings.push({
-          type: 'info',
-          message: 'Comprobante de donación: no genera obligaciones tributarias'
-        });
-        break;
-      default:
-        break;
-    }
-    if (warnings.length === 0) return null;
+    if (!calculations?.warnings || calculations.warnings.length === 0) return null;
+    const warnings = calculations.warnings;
+    
     return (
       <div className="space-y-2">
         {warnings.map((warning, index) => (
@@ -184,10 +136,10 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
             key={index}
             className={`p-3 rounded-lg border flex items-start gap-2 ${
               warning.type === 'error'
-                ? 'bg-red-50 border-red-200 text-red-800'
+                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200'
                 : warning.type === 'warning'
-                ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                : 'bg-blue-50 border-blue-200 text-blue-800'
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200'
+                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
             }`}
           >
             {warning.type === 'error' ? (
@@ -205,105 +157,80 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Calculator className="w-6 h-6 text-blue-600" />
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Calculadora de Impuestos
-            </h2>
-            <p className="text-sm text-gray-600">
-              {dteInfo.name} ({tipoDte}) - {items.length} ítem(s)
-            </p>
-          </div>
-        </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-          getStatusColor() === 'green'
-            ? 'bg-green-100 text-green-800'
-            : getStatusColor() === 'red'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-gray-100 text-gray-600'
-        }`}>
-          {isCalculating ? 'Calculando...' :
-           calculations?.validation?.isValid ? 'Válido' :
-           calculations ? 'Con errores' : 'Sin calcular'}
-        </div>
-      </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 lg:p-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <Calculator className="w-5 h-5 text-blue-600" />
+        Calculadora de Impuestos
+      </h3>
 
-      {/* Info tipo DTE */}
-      <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">
-          Configuración para {dteInfo.name}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Percent className="w-4 h-4 text-blue-500" />
-            <span className="text-gray-600">IVA:</span>
-            <span className={`font-medium ${dteInfo.iva.applies ? 'text-green-600' : 'text-gray-500'}`}>
-              {dteInfo.iva.applies ? `${(dteInfo.iva.rate * 100).toFixed(0)}%` : 'No aplica'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-orange-500" />
-            <span className="text-gray-600">Retención:</span>
-            <span className={`font-medium ${dteInfo.retencion.applies ? 'text-orange-600' : 'text-gray-500'}`}>
-              {dteInfo.retencion.applies ? `${(dteInfo.retencion.rate * 100).toFixed(0)}%` : 'No aplica'}
-            </span>
-          </div>
+      {/* Información del tipo DTE */}
+      <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+          Calculando para: {dteInfo.name} ({tipoDte})
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs text-blue-800 dark:text-blue-200">
+          <div>• <strong>IVA:</strong> {dteInfo.iva.applies ? `${(dteInfo.iva.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
+          <div>• <strong>Retención:</strong> {dteInfo.retencion.applies ? `${(dteInfo.retencion.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
           {dteInfo.minAmount > 0 && (
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-500" />
-              <span className="text-gray-600">Mínimo:</span>
-              <span className="font-medium text-yellow-600">
-                ${dteInfo.minAmount.toFixed(2)}
-              </span>
-            </div>
+            <div>• <strong>Monto mínimo:</strong> ${dteInfo.minAmount.toFixed(2)}</div>
           )}
+          <div>• <strong>Estructura:</strong> {dteInfo.structure}</div>
         </div>
       </div>
 
-      {/* Controles de configuración */}
-      <div className="mb-6 space-y-4">
-        {/* Descuento global */}
+      {/* Controles de cálculo */}
+      <div className="space-y-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descuento Global
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Subtotal de Ventas
             </label>
             <input
               type="number"
+              value={subtotal}
+              onChange={(e) => setSubtotal(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
               min="0"
               step="0.01"
-              value={descuentoGlobal}
-              onChange={(e) => handleDescuentoChange(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
-          {/* Aplicar retención */}
-          {dteInfo.retencion.applies && (
-            <div className="flex items-center">
-              <div className="flex items-center h-full">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={aplicarRetencion}
-                    onChange={(e) => handleRetencionChange(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Aplicar Retención {(dteInfo.retencion.rate * 100).toFixed(0)}%
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Descuentos
+            </label>
+            <input
+              type="number"
+              value={descuentos}
+              onChange={(e) => setDescuentos(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            />
+          </div>
         </div>
+        {/* Aplicar retención */}
+        {dteInfo.retencion.applies && (
+          <div className="flex items-center">
+            <div className="flex items-center h-full">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={aplicarRetencion}
+                  onChange={(e) => handleRetencionChange(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Aplicar Retención {(dteInfo.retencion.rate * 100).toFixed(0)}%
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
         {/* Info adicional de retención */}
         {dteInfo.retencion.applies && aplicarRetencion && dteInfo.retencion.minThreshold > 0 && (
-          <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+          <div className="text-xs text-gray-600 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-2">
             <Info className="w-4 h-4 inline mr-1" />
             La retención se aplicará solo si el monto supera ${dteInfo.retencion.minThreshold.toFixed(2)}
           </div>
@@ -315,59 +242,59 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
         <div className="space-y-6">
           {renderDteWarnings()}
           {/* Resumen */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Resumen de Cálculos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Resumen de Cálculos</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(calculations.subtotal)}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-300">Subtotal:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(calculations.subtotal)}</span>
                 </div>
                 {calculations.descuentos > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Descuentos:</span>
-                    <span className="font-medium text-red-600">-{formatCurrency(calculations.descuentos)}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Descuentos:</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">-{formatCurrency(calculations.descuentos)}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal Ventas:</span>
-                  <span className="font-medium">{formatCurrency(calculations.subTotalVentas)}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-300">Subtotal Ventas:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(calculations.subTotalVentas)}</span>
                 </div>
               </div>
               <div className="space-y-2">
                 {calculations.ventasGravadas > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Ventas Gravadas:</span>
-                    <span className="font-medium text-green-600">{formatCurrency(calculations.ventasGravadas)}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Ventas Gravadas:</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(calculations.ventasGravadas)}</span>
                   </div>
                 )}
                 {calculations.ventasExentas > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Ventas Exentas:</span>
-                    <span className="font-medium text-blue-600">{formatCurrency(calculations.ventasExentas)}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Ventas Exentas:</span>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(calculations.ventasExentas)}</span>
                   </div>
                 )}
                 {calculations.iva > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">IVA ({(dteInfo.iva.rate * 100).toFixed(0)}%):</span>
-                    <span className="font-medium text-green-600">+{formatCurrency(calculations.iva)}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">IVA ({(dteInfo.iva.rate * 100).toFixed(0)}%):</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(calculations.iva)}</span>
                   </div>
                 )}
                 {calculations.reteRenta > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Retención ({(dteInfo.retencion.rate * 100).toFixed(0)}%):</span>
-                    <span className="font-medium text-orange-600">-{formatCurrency(calculations.reteRenta)}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Retención ({(dteInfo.retencion.rate * 100).toFixed(0)}%):</span>
+                    <span className="font-medium text-orange-600 dark:text-orange-400">-{formatCurrency(calculations.reteRenta)}</span>
                   </div>
                 )}
               </div>
             </div>
             {/* Total */}
-            <div className="border-t border-gray-300 pt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-900">
+            <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">
                   {tipoDte === "15" ? "Total Donación:" : tipoDte === "07" ? "Total Retenido:" : "Total a Pagar:"}
                 </span>
-                <span className="text-2xl font-bold text-blue-600">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {formatCurrency(
                     calculations.totalPagar ||
                     calculations.dteSpecificFields?.valorTotal ||
@@ -382,15 +309,17 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
           {renderDteSpecificFields()}
           {/* Tributos */}
           {calculations.tributos && calculations.tributos.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-blue-900 mb-3">Tributos Aplicados</h4>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-3">
+                Tributos Calculados ({calculations.tributos.length})
+              </h4>
               <div className="space-y-2">
                 {calculations.tributos.map((tributo, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm">
-                    <span className="text-blue-700">
-                      {tributo.codigo} - {tributo.descripcion}
+                  <div key={index} className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2 text-sm">
+                    <span className="text-yellow-800 dark:text-yellow-200 font-medium">
+                      {tributo.codigo} - {tributo.descripcion}:
                     </span>
-                    <span className="font-medium text-blue-900">
+                    <span className="text-yellow-900 dark:text-yellow-100 font-semibold">
                       {formatCurrency(tributo.valor)}
                     </span>
                   </div>
@@ -398,45 +327,6 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
               </div>
             </div>
           )}
-          {/* Errores */}
-          {calculations.validation && !calculations.validation.isValid && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-red-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Errores de Validación
-              </h4>
-              <ul className="space-y-1">
-                {calculations.validation.errors.map((error, index) => (
-                  <li key={index} className="text-sm text-red-700">
-                    • {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {/* Válido */}
-          {calculations.validation && calculations.validation.isValid && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">
-                  Cálculos válidos para {dteInfo.name}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Sin datos */}
-      {(!calculations || !items || items.length === 0) && (
-        <div className="text-center py-8 text-gray-500">
-          <Calculator className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-          <p className="text-sm">
-            {items && items.length === 0
-              ? 'Agregue productos para calcular impuestos'
-              : 'Calculando impuestos...'}
-          </p>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, CheckCircle, XCircle, Download, RotateCw } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Download, RotateCw, BarChart3 } from 'lucide-react';
 
 const DTETestSuite = () => {
   const [testResults, setTestResults] = useState({});
@@ -403,13 +403,13 @@ const DTETestSuite = () => {
   const stats = getTestStats();
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-3">
           <Play className="text-green-600" />
           Suite de Pruebas DTE - Verificación de Cálculos
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
           Pruebas automatizadas para verificar que los cálculos de impuestos sean correctos según los schemas oficiales del MH.
         </p>
 
@@ -460,8 +460,8 @@ const DTETestSuite = () => {
 
       {/* Resultados por tipo DTE */}
       {Object.entries(testResults).map(([tipoDte, dteResult]) => (
-        <div key={tipoDte} className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+        <div key={tipoDte} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
             {tipoDte} - {dteResult.name}
           </h2>
           
@@ -471,12 +471,12 @@ const DTETestSuite = () => {
                 key={index}
                 className={`border rounded-lg p-4 ${
                   testCase.passed
-                    ? 'border-green-200 bg-green-50'
-                    : 'border-red-200 bg-red-50'
+                    ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                    : 'border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-800 flex items-center gap-2">
+                  <h3 className="font-medium text-gray-800 dark:text-white flex items-center gap-2">
                     {testCase.passed ? (
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     ) : (
@@ -486,8 +486,8 @@ const DTETestSuite = () => {
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     testCase.passed
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                      ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                      : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
                   }`}>
                     {testCase.passed ? 'PASÓ' : 'FALLÓ'}
                   </span>
@@ -524,6 +524,28 @@ const DTETestSuite = () => {
           </div>
         </div>
       ))}
+
+      {/* Resumen de resultados */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+          <BarChart3 className="text-blue-600" />
+          Resumen de Resultados
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-sm text-blue-800">Total Pruebas</div>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
+            <div className="text-sm text-green-800">Exitosas</div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+            <div className="text-sm text-red-800">Fallidas</div>
+          </div>
+        </div>
+      </div>
 
       {/* Instrucciones */}
       {Object.keys(testResults).length === 0 && !running && (

@@ -207,18 +207,18 @@ const DTESchemaAnalyzer = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-3">
           <Calculator className="text-blue-600" />
           Analizador de Schemas DTE - El Salvador
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
           Herramienta para analizar los schemas oficiales del Ministerio de Hacienda y extraer reglas de cálculo específicas para cada tipo de DTE.
         </p>
 
         {/* Upload Section */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-6">
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-6">
           <input
             type="file"
             multiple
@@ -230,10 +230,10 @@ const DTESchemaAnalyzer = () => {
           <label htmlFor="schema-upload" className="cursor-pointer">
             <div className="text-center">
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium text-gray-700 mb-2">
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Subir Schemas JSON del Ministerio de Hacienda
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Selecciona múltiples archivos .json de los schemas oficiales DTE
               </p>
             </div>
@@ -250,8 +250,8 @@ const DTESchemaAnalyzer = () => {
 
       {/* Schemas List */}
       {Object.keys(schemas).length > 0 && (
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
             <FileText className="text-green-600" />
             Schemas Cargados ({Object.keys(schemas).length})
           </h2>
@@ -265,29 +265,28 @@ const DTESchemaAnalyzer = () => {
               return (
                 <div 
                   key={schemaKey}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedSchema === schemaKey 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
+                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                    selectedSchema === schemaKey
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
-                  onClick={() => analyzeSchema(schemaKey)}
+                  onClick={() => setSelectedSchema(schemaKey)}
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-800">{schemaKey}</h3>
-                      {dteType && (
-                        <div className="flex gap-4 text-sm text-gray-600 mt-1">
-                          <span className="font-medium">{knownDTETypes[dteType].name}</span>
-                          <span>IVA: {knownDTETypes[dteType].iva}%</span>
-                          <span>Retención: {knownDTETypes[dteType].retencion}</span>
-                        </div>
-                      )}
+                      <h3 className="font-medium text-gray-900 dark:text-white">
+                        {dteType ? knownDTETypes[dteType].name : schemaKey}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {schemaKey}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {dteType ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-yellow-500" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {Object.keys(schemas[schemaKey]).length} propiedades
+                      </span>
+                      {selectedSchema === schemaKey && (
+                        <CheckCircle className="h-5 w-5 text-blue-600" />
                       )}
                     </div>
                   </div>
@@ -300,9 +299,9 @@ const DTESchemaAnalyzer = () => {
 
       {/* Analysis Results */}
       {analysis && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
               Análisis: {analysis.fileName}
             </h2>
             <button
@@ -315,24 +314,24 @@ const DTESchemaAnalyzer = () => {
           </div>
 
           {analysis.dteTypeInfo && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-bold text-blue-800 mb-2">Información del Tipo DTE</h3>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
+              <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-2">Información del Tipo DTE</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-blue-700">Tipo:</span>
-                  <p>{analysis.dteTypeInfo.name}</p>
+                  <span className="font-medium text-blue-700 dark:text-blue-300">Tipo:</span>
+                  <p className="text-blue-800 dark:text-blue-200">{analysis.dteTypeInfo.name}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-700">IVA:</span>
-                  <p>{analysis.dteTypeInfo.iva}%</p>
+                  <span className="font-medium text-blue-700 dark:text-blue-300">IVA:</span>
+                  <p className="text-blue-800 dark:text-blue-200">{analysis.dteTypeInfo.iva}%</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-700">Retención:</span>
-                  <p>{analysis.dteTypeInfo.retencion}</p>
+                  <span className="font-medium text-blue-700 dark:text-blue-300">Retención:</span>
+                  <p className="text-blue-800 dark:text-blue-200">{analysis.dteTypeInfo.retencion}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-700">Archivo:</span>
-                  <p>{analysis.dteTypeInfo.file}</p>
+                  <span className="font-medium text-blue-700 dark:text-blue-300">Archivo:</span>
+                  <p className="text-blue-800 dark:text-blue-200">{analysis.dteTypeInfo.file}</p>
                 </div>
               </div>
             </div>
@@ -370,15 +369,15 @@ const DTESchemaAnalyzer = () => {
 
           {/* Calculation Rules */}
           {Object.keys(analysis.calculationRules).length > 0 && (
-            <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-bold text-yellow-800 mb-3">
+            <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+              <h3 className="font-bold text-yellow-800 dark:text-yellow-200 mb-3">
                 Reglas de Cálculo Detectadas ({Object.keys(analysis.calculationRules).length})
               </h3>
               <div className="max-h-80 overflow-y-auto">
                 {Object.entries(analysis.calculationRules).map(([path, rule]) => (
-                  <div key={path} className="mb-3 p-3 bg-white rounded border">
-                    <div className="font-medium text-gray-800 mb-1">{path}</div>
-                    <pre className="text-xs text-gray-600 overflow-x-auto">
+                  <div key={path} className="mb-3 p-3 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
+                    <div className="font-medium text-gray-800 dark:text-white mb-1">{path}</div>
+                    <pre className="text-xs text-gray-600 dark:text-gray-300 overflow-x-auto">
                       {JSON.stringify(rule, null, 2)}
                     </pre>
                   </div>
@@ -388,9 +387,9 @@ const DTESchemaAnalyzer = () => {
           )}
 
           {/* Generated Rules Preview */}
-          <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-bold text-gray-800 mb-3">Preview de Reglas Generadas</h3>
-            <pre className="text-sm text-gray-700 overflow-x-auto bg-white p-4 rounded border">
+          <div className="mt-6 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+            <h3 className="font-bold text-gray-800 dark:text-white mb-3">Preview de Reglas Generadas</h3>
+            <pre className="text-sm text-gray-700 dark:text-gray-300 overflow-x-auto bg-white dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-600">
               {JSON.stringify(generateCalculationRules(), null, 2)}
             </pre>
           </div>

@@ -314,19 +314,19 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
   // Renderizar componente de error si no existe el tipo de DTE
   if (!DteComponent) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-3 mb-6">
           <AlertCircle className="w-6 h-6 text-red-500" />
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Tipo de DTE no soportado
           </h2>
         </div>
         
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md p-4">
+          <p className="text-red-800 dark:text-red-200">
             El tipo de DTE <strong>{selectedTipoDte}</strong> no está implementado aún.
           </p>
-          <p className="text-red-700 mt-2">
+          <p className="text-red-700 dark:text-red-300 mt-2">
             Tipos soportados: {Object.keys(DTE_COMPONENTS).join(', ')}
           </p>
         </div>
@@ -335,27 +335,27 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Formulario de Documento Tributario Electrónico
       </h2>
 
       {/* Selector de tipo de DTE */}
-      <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+      <div className="mb-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5 text-blue-600" />
           Tipo de Documento Tributario
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Seleccionar Tipo de DTE *
             </label>
             <select
               value={selectedTipoDte}
               onChange={(e) => handleTipoDteChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
               {CATALOGS.TIPOS_DTE.map(tipo => (
@@ -367,13 +367,13 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
           </div>
           
           <div className="flex items-end">
-            <div className="bg-white border border-gray-200 rounded-md p-3 w-full">
-              <div className="text-sm text-gray-600">
+            <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-3 w-full">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 <strong>Documento seleccionado:</strong>
                 <div className="text-lg font-semibold text-blue-600 mt-1">
                   {dteInfo?.title || "Tipo no encontrado"}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Versión: {dteInfo?.version || "N/A"}
                 </div>
               </div>
@@ -396,20 +396,20 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
 export function CamposRequeridosPendientes({ missingFields }) {
   if (!missingFields || missingFields.length === 0) return null;
   return (
-    <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+    <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md p-4">
       <div className="flex items-center gap-2 mb-2">
         <AlertCircle className="w-5 h-5 text-yellow-600" />
-        <h4 className="text-sm font-medium text-yellow-800">
-          Campos requeridos faltantes ({missingFields.length})
+        <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">
+          Campos Requeridos Pendientes ({missingFields.length})
         </h4>
       </div>
-      <ul className="text-sm text-yellow-700 space-y-1">
-        {missingFields.slice(0, 5).map((field, index) => (
-          <li key={index}>• {field}</li>
+      <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+        {missingFields.map((field, index) => (
+          <li key={index} className="flex items-center gap-2">
+            <span className="text-yellow-600">•</span>
+            <span>{field}</span>
+          </li>
         ))}
-        {missingFields.length > 5 && (
-          <li>• ... y {missingFields.length - 5} campos más</li>
-        )}
       </ul>
     </div>
   );
@@ -417,15 +417,19 @@ export function CamposRequeridosPendientes({ missingFields }) {
 
 // NUEVO: Exportar panel de debug info
 export function DebugInfo({ selectedTipoDte, DteComponent, validationState }) {
-  if (import.meta.env.MODE !== 'development') return null;
   return (
-    <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-md">
-      <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Info:</h4>
-      <div className="text-xs text-gray-600 space-y-1">
+    <div className="mb-6 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Info className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        <h4 className="font-semibold text-gray-800 dark:text-white">
+          Información de Debug
+        </h4>
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
         <p><strong>Tipo DTE:</strong> {selectedTipoDte}</p>
-        <p><strong>Componente:</strong> {DteComponent?.name}</p>
+        <p><strong>Componente:</strong> {DteComponent?.name || 'No encontrado'}</p>
         <p><strong>Válido:</strong> {validationState.isValid ? 'Sí' : 'No'}</p>
-        <p><strong>Campos faltantes:</strong> {validationState.missingFields.length}</p>
+        <p><strong>Campos faltantes:</strong> {validationState.missingFields?.length || 0}</p>
       </div>
     </div>
   );

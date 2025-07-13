@@ -10,7 +10,10 @@ import {
   FileText, 
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  ChevronUp,
+  ChevronDown,
+  AlertTriangle
 } from 'lucide-react';
 import { schemaValidator } from '../../services/schemaValidator.js';
 
@@ -120,8 +123,8 @@ const SchemaValidationIndicator = ({
 
   if (!dteData || !tipoDte) {
     return (
-      <div className={`p-4 border rounded-lg bg-gray-50 border-gray-200 ${className}`}>
-        <div className="flex items-center gap-2 text-gray-500">
+      <div className={`p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${className}`}>
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Info className="w-5 h-5" />
           <span className="text-sm">Esperando datos para validar</span>
         </div>
@@ -140,157 +143,104 @@ const SchemaValidationIndicator = ({
               <h3 className={`font-medium ${getStatusColor()}`}>
                 Validación de Esquema
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {getStatusText()} • {validationResult?.schemaName || 'Esquema no encontrado'}
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <button
-              onClick={validateDocument}
-              disabled={isValidating}
-              className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-              title="Revalidar"
-            >
-              <RefreshCw className={`w-4 h-4 ${isValidating ? 'animate-spin' : ''}`} />
-            </button>
-            
             {validationResult && (
               <button
                 onClick={downloadValidationReport}
-                className="p-2 text-gray-500 hover:text-gray-700"
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Descargar reporte"
               >
                 <Download className="w-4 h-4" />
               </button>
             )}
-            
-            {validationResult && (
-              <button
-                onClick={() => setShowFullReport(!showFullReport)}
-                className="p-2 text-gray-500 hover:text-gray-700"
-                title="Ver detalles"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
+            <button
+              onClick={() => setShowFullReport(!showFullReport)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title={showFullReport ? "Ocultar detalles" : "Ver detalles"}
+            >
+              {showFullReport ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Errores de validación */}
+      {validationResult && validationResult.errors && validationResult.errors.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-3 flex items-center gap-2">
+            <XCircle className="h-4 w-4" />
+            Errores de Validación ({validationResult.errors.length})
+          </h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {validationResult.errors.slice(0, 10).map((error, index) => (
+              <div key={index} className="text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-600 dark:text-red-400 font-mono text-xs mt-0.5">•</span>
+                  <div className="flex-1">
+                    <p className="text-red-800 dark:text-red-200 font-medium">
+                      {error.path || 'Campo desconocido'}
+                    </p>
+                    <p className="text-red-700 dark:text-red-300 text-xs">
+                      {error.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {validationResult.errors.length > 10 && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                ... y {validationResult.errors.length - 10} errores más
+              </p>
             )}
           </div>
         </div>
+      )}
 
-        {/* Resumen de validación */}
-        {validationResult && (
-          <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="text-center">
-              <div className="font-semibold text-gray-900">
-                {validationResult.errors.length}
+      {/* Advertencias */}
+      {validationResult && validationResult.warnings && validationResult.warnings.length > 0 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Advertencias ({validationResult.warnings.length})
+          </h4>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {validationResult.warnings.slice(0, 5).map((warning, index) => (
+              <div key={index} className="text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-yellow-600 dark:text-yellow-400 font-mono text-xs mt-0.5">•</span>
+                  <div className="flex-1">
+                    <p className="text-yellow-800 dark:text-yellow-200">
+                      {warning.path || 'Campo desconocido'}
+                    </p>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-xs">
+                      {warning.message}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="text-gray-500">Errores</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-gray-900">
-                {validationResult.warnings.length}
-              </div>
-              <div className="text-gray-500">Advertencias</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-gray-900">
-                {validationResult.missingFields.length}
-              </div>
-              <div className="text-gray-500">Campos faltantes</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-gray-900">
-                {validationResult.invalidFields.length}
-              </div>
-              <div className="text-gray-500">Campos inválidos</div>
-            </div>
+            ))}
+            {validationResult.warnings.length > 5 && (
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                ... y {validationResult.warnings.length - 5} advertencias más
+              </p>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Detalles de validación */}
-      {showDetails && validationResult && (
-        <div className="space-y-4">
-          {/* Errores */}
-          {validationResult.errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-red-900 mb-3 flex items-center gap-2">
-                <XCircle className="w-4 h-4" />
-                Errores de Validación ({validationResult.errors.length})
-              </h4>
-              <div className="space-y-2">
-                {validationResult.errors.map((error, index) => (
-                  <div key={index} className="text-sm text-red-800 bg-red-100 p-2 rounded">
-                    <div className="font-medium">{error.path || 'Documento'}</div>
-                    <div>{error.message}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Advertencias */}
-          {validationResult.warnings.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-yellow-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Advertencias ({validationResult.warnings.length})
-              </h4>
-              <div className="space-y-2">
-                {validationResult.warnings.map((warning, index) => (
-                  <div key={index} className="text-sm text-yellow-800 bg-yellow-100 p-2 rounded">
-                    {warning}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Campos faltantes */}
-          {validationResult.missingFields.length > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-orange-900 mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Campos Requeridos Faltantes ({validationResult.missingFields.length})
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {validationResult.missingFields.map((field, index) => (
-                  <div key={index} className="text-sm text-orange-800 bg-orange-100 p-2 rounded">
-                    {field}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Campos inválidos */}
-          {validationResult.invalidFields.length > 0 && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Campos con Formato Inválido ({validationResult.invalidFields.length})
-              </h4>
-              <div className="space-y-2">
-                {validationResult.invalidFields.map((field, index) => (
-                  <div key={index} className="text-sm text-purple-800 bg-purple-100 p-2 rounded">
-                    <div className="font-medium">{field.path}</div>
-                    <div>{field.message}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       {/* Reporte completo */}
       {showFullReport && validationResult && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+        <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
             Reporte Completo de Validación
           </h4>
-          <pre className="text-xs text-gray-700 bg-white p-3 rounded border overflow-auto max-h-96">
+          <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 overflow-auto max-h-96">
             {JSON.stringify(validationResult, null, 2)}
           </pre>
         </div>

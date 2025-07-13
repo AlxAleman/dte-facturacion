@@ -26,28 +26,28 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-md w-full max-w-sm"
+        className="bg-white dark:bg-gray-800 p-6 rounded shadow-md w-full max-w-sm border border-gray-200 dark:border-gray-700"
         autoComplete="off"
       >
-        <h2 className="text-2xl font-bold mb-4 text-center">Iniciar sesión</h2>
-        <label className="block mb-2">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">Iniciar sesión</h2>
+        <label className="block mb-2 text-gray-700 dark:text-gray-300">
           Usuario
           <input
             type="text"
-            className="w-full border p-2 rounded mt-1"
+            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoFocus
           />
         </label>
-        <label className="block mb-4">
+        <label className="block mb-4 text-gray-700 dark:text-gray-300">
           Contraseña
           <input
             type="password"
-            className="w-full border p-2 rounded mt-1"
+            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -65,7 +65,7 @@ export default function LoginForm() {
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
-      <div className="mt-4 text-gray-400 text-xs">
+      <div className="mt-4 text-gray-400 dark:text-gray-500 text-xs">
         Usuario: <b>demo</b> <br />
         Contraseña: <b>demo123</b>
       </div>

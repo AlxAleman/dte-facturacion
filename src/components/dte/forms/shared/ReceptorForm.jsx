@@ -109,12 +109,12 @@ const ReceptorForm = ({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Información del Receptor</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Información del Receptor</h3>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Nombre del Receptor {requiredFields.includes('receptor.nombre') && <span className="text-red-500">*</span>}
           </label>
           <input
@@ -122,22 +122,22 @@ const ReceptorForm = ({
             value={formData.receptor.nombre}
             onChange={(e) => handleInputChange('nombre', e.target.value)}
             placeholder="Nombre completo o razón social"
-            className={getFieldClassName ? getFieldClassName('receptor.nombre') : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+            className={getFieldClassName ? getFieldClassName('receptor.nombre') : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
             required={requiredFields.includes('receptor.nombre')}
           />
           {isFieldEmpty && isFieldEmpty('receptor.nombre') && (
-            <p className="text-sm text-red-600 mt-1">Nombre del receptor es requerido</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">Nombre del receptor es requerido</p>
           )}
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tipo de Documento {requiredFields.includes('receptor.tipoDocumento') && <span className="text-red-500">*</span>}
           </label>
           <select
             value={formData.receptor.tipoDocumento}
             onChange={(e) => handleInputChange('tipoDocumento', e.target.value)}
-            className={getFieldClassName ? getFieldClassName('receptor.tipoDocumento') : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+            className={getFieldClassName ? getFieldClassName('receptor.tipoDocumento') : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
             required={requiredFields.includes('receptor.tipoDocumento')}
           >
             {CATALOGS.TIPOS_DOCUMENTO_IDENTIFICACION.map(tipo => (
@@ -147,12 +147,12 @@ const ReceptorForm = ({
             ))}
           </select>
           {isFieldEmpty && isFieldEmpty('receptor.tipoDocumento') && (
-            <p className="text-sm text-red-600 mt-1">Tipo de documento es requerido</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">Tipo de documento es requerido</p>
           )}
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Número de Documento {requiredFields.includes('receptor.numDocumento') && <span className="text-red-500">*</span>}
           </label>
           <input
@@ -160,17 +160,17 @@ const ReceptorForm = ({
             value={formData.receptor.numDocumento}
             onChange={(e) => handleInputChange('numDocumento', e.target.value)}
             placeholder={formData.receptor.tipoDocumento === '13' ? 'DUI (ej: 12345678-9)' : 'NIT (ej: 0614-123456-789-0)'}
-            className={getFieldClassName ? getFieldClassName('receptor.numDocumento') : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+            className={getFieldClassName ? getFieldClassName('receptor.numDocumento') : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
             required={requiredFields.includes('receptor.numDocumento')}
           />
           {isFieldEmpty && isFieldEmpty('receptor.numDocumento') && (
-            <p className="text-sm text-red-600 mt-1">Número de documento es requerido</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">Número de documento es requerido</p>
           )}
         </div>
         
         {showNrc && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               NRC {tipoDte === '03' ? <span className="text-red-500">*</span> : (formData.receptor.tipoDocumento === '36' && '*')}
             </label>
             <input
@@ -178,19 +178,19 @@ const ReceptorForm = ({
               value={formData.receptor.nrc || ''}
               onChange={(e) => handleInputChange('nrc', e.target.value)}
               placeholder={tipoDte === '03' ? 'Número de registro de contribuyente' : (formData.receptor.tipoDocumento === '13' ? 'No aplica para DUI' : 'Número de registro de contribuyente')}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${tipoDte === '03' ? '' : (formData.receptor.tipoDocumento === '13' ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : '')}`}
+              className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${tipoDte === '03' ? '' : (formData.receptor.tipoDocumento === '13' ? 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : '')}`}
               disabled={tipoDte === '03' ? false : formData.receptor.tipoDocumento === '13'}
               required={tipoDte === '03' ? true : formData.receptor.tipoDocumento === '36'}
             />
             {tipoDte === '03' ? (
-              <p className="text-sm text-gray-600 mt-1">NRC requerido para CCF</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">NRC requerido para CCF</p>
             ) : (
               <>
                 {formData.receptor.tipoDocumento === '13' && (
-                  <p className="text-sm text-gray-600 mt-1">NRC no aplica para DUI</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">NRC no aplica para DUI</p>
                 )}
                 {formData.receptor.tipoDocumento === '36' && !formData.receptor.nrc && (
-                  <p className="text-sm text-red-600 mt-1">NRC es requerido para NIT</p>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">NRC es requerido para NIT</p>
                 )}
               </>
             )}
@@ -200,20 +200,20 @@ const ReceptorForm = ({
         {showContacto && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Teléfono
               </label>
               <input
-                type="text"
+                type="tel"
                 value={formData.receptor.telefono}
                 onChange={(e) => handleInputChange('telefono', e.target.value)}
-                placeholder="Número de teléfono"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Teléfono de contacto"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Correo Electrónico
               </label>
               <input
@@ -221,110 +221,122 @@ const ReceptorForm = ({
                 value={formData.receptor.correo}
                 onChange={(e) => handleInputChange('correo', e.target.value)}
                 placeholder="correo@ejemplo.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
           </>
         )}
-        
-        {showActividad && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Actividad Económica
-            </label>
+      </div>
+      
+      {showActividad && (
+        <div className="mt-6">
+          <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Actividad Económica</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Código de Actividad
+              </label>
+              <input
+                type="text"
+                value={formData.receptor.codActividad}
+                onChange={(e) => handleInputChange('codActividad', e.target.value)}
+                placeholder="Código de actividad económica"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+            
             <div className="actividad-search-container relative">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Descripción de Actividad
+              </label>
               <input
                 type="text"
                 value={formData.receptor.descActividad}
                 onChange={(e) => handleInputChange('descActividad', e.target.value)}
+                placeholder="Buscar actividad económica..."
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 onFocus={() => setShowActividadSuggestions(true)}
-                placeholder="Buscar actividad económica"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              
               {showActividadSuggestions && resultadosBusqueda.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
                   {resultadosBusqueda.map((actividad, index) => (
                     <button
                       key={index}
                       type="button"
-                      className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                       onClick={() => {
                         handleInputChange('codActividad', actividad.codigo);
                         handleInputChange('descActividad', actividad.valor);
                         setShowActividadSuggestions(false);
                       }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm border-b border-gray-200 dark:border-gray-600 last:border-b-0"
                     >
                       <div className="font-medium">{actividad.codigo}</div>
-                      <div className="text-sm text-gray-600">{actividad.valor}</div>
+                      <div className="text-gray-600 dark:text-gray-400">{actividad.valor}</div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        )}
-        
-        {showDireccion && (
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Dirección
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Departamento
-                </label>
-                <select
-                  value={formData.receptor.direccion?.departamento || ''}
-                  onChange={(e) => handleNestedInputChange('direccion', 'departamento', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Seleccionar departamento</option>
-                  {catalogoDepartamentos.map(depto => (
-                    <option key={depto.codigo} value={depto.codigo}>
-                      {depto.valor}
+        </div>
+      )}
+      
+      {showDireccion && (
+        <div className="mt-6">
+          <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Dirección</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Departamento
+              </label>
+              <select
+                value={formData.receptor.direccion.departamento}
+                onChange={(e) => handleNestedInputChange('direccion', 'departamento', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                {catalogoDepartamentos.map(depto => (
+                  <option key={depto.codigo} value={depto.codigo}>
+                    {depto.codigo} - {depto.valor}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Municipio
+              </label>
+              <select
+                value={formData.receptor.direccion.municipio}
+                onChange={(e) => handleNestedInputChange('direccion', 'municipio', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                {catalogoMunicipios
+                  .filter(muni => muni.codigo.startsWith(formData.receptor.direccion.departamento))
+                  .map(muni => (
+                    <option key={muni.codigo} value={muni.codigo}>
+                      {muni.codigo} - {muni.valor}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Municipio
-                </label>
-                <select
-                  value={formData.receptor.direccion?.municipio || ''}
-                  onChange={(e) => handleNestedInputChange('direccion', 'municipio', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={!formData.receptor.direccion?.departamento}
-                >
-                  <option value="">Seleccionar municipio</option>
-                  {formData.receptor.direccion?.departamento && 
-                    catalogoMunicipios
-                      .filter(muni => muni.departamento === formData.receptor.direccion.departamento)
-                      .map(muni => (
-                        <option key={muni.codigo} value={muni.codigo}>
-                          {muni.valor}
-                        </option>
-                      ))
-                  }
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Complemento
-                </label>
-                <input
-                  type="text"
-                  value={formData.receptor.direccion?.complemento || ''}
-                  onChange={(e) => handleNestedInputChange('direccion', 'complemento', e.target.value)}
-                  placeholder="Dirección específica"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Complemento
+              </label>
+              <input
+                type="text"
+                value={formData.receptor.direccion.complemento}
+                onChange={(e) => handleNestedInputChange('direccion', 'complemento', e.target.value)}
+                placeholder="Dirección específica"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

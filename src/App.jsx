@@ -5,6 +5,7 @@ import DteFormContainer from "./components/dte/forms/DteFormContainer";
 import DTEManager from "./components/dte/DTEManager";  // ← Sistema profesional
 import DteTestSuite from "./components/dte/DteTestSuite";
 import DTESchemaAnalyzer from "./components/dte/DTESchemaAnalyzer";
+import ThemeToggle from "./components/ui/ThemeToggle";
 
 
 
@@ -16,6 +17,9 @@ export default function App() {
 
   return (
     <Router>
+      {/* Theme Toggle - Aparece en todas las páginas */}
+      <ThemeToggle />
+      
       <Routes>
         {/* Ruta de Login - Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
@@ -189,10 +193,10 @@ export default function App() {
           path="/404"
           element={
             isAuthenticated ? (
-              <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto text-center">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                  <p className="text-gray-600 mb-6">Página no encontrada</p>
+              <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md mx-auto text-center border border-gray-200 dark:border-gray-700">
+                  <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">Página no encontrada</p>
                   <div className="space-y-3">
                     <button
                       onClick={() => window.location.href = '/'}

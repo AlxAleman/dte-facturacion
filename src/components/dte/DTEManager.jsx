@@ -1068,19 +1068,19 @@ const DTEManager = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6">
+    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-8">
         {/* Header y ambiente */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Gestión de Documentos Tributarios Electrónicos
             </h1>
             {/* 🆕 Mostrar tipo DTE actual */}
             {dteData && (
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-sm text-gray-600">Tipo actual:</span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Tipo actual:</span>
+                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm font-medium">
                   {getCurrentDteType()} - {getCurrentDteInfo().name}
                 </span>
               </div>
@@ -1090,7 +1090,7 @@ const DTEManager = () => {
             {/* Botón de configuración de empresa */}
             <button
               onClick={() => setShowEmpresaConfig(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <Building className="w-4 h-4" />
               Configurar Empresa
@@ -1100,15 +1100,15 @@ const DTEManager = () => {
             <select
               value={environment}
               onChange={(e) => setEnvironment(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >
               <option value="test">Ambiente de Pruebas</option>
               <option value="production">Ambiente de Producción</option>
             </select>
             {/* Indicador de ambiente */}
             <div className={`px-3 py-1 rounded-full text-xs font-medium ${environment === 'production'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-yellow-100 text-yellow-800'
+                ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
               }`}>
               {environment === 'production' ? 'PRODUCCIÓN' : 'PRUEBAS'}
             </div>
@@ -1119,23 +1119,23 @@ const DTEManager = () => {
       </div>
 
       {/* Main layout responsive */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 lg:gap-6">
         {/* Panel principal */}
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-3">
           {/* Paso 1: Formulario DTE */}
           {activeStep === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               <DteFormContainer
                 onDataChange={handleDTEDataChange}
                 initialData={dteData}
               />
               
-              {/* Botón continuar responsive - 🆕 ACTUALIZADO */}
+              {/* Botón continuar responsive */}
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setActiveStep(2)}
                   disabled={!canProceedToNextStep(1)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {getContinueButtonText(1)}
                 </button>
@@ -1143,15 +1143,15 @@ const DTEManager = () => {
             </div>
           )}
 
-          {/* Paso 2: Cálculos - 🆕 ACTUALIZADO */}
+          {/* Paso 2: Cálculos */}
           {activeStep === 2 && (
-            <div className="space-y-6">
-              {/* 🆕 Información del tipo DTE */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+            <div className="space-y-4 lg:space-y-6">
+              {/* Información del tipo DTE */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
                   Calculando para: {getCurrentDteInfo().name} ({getCurrentDteType()})
                 </h3>
-                <div className="text-xs text-blue-800 space-y-1">
+                <div className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
                   <div>• <strong>IVA:</strong> {getCurrentDteInfo().iva.applies ? `${(getCurrentDteInfo().iva.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
                   <div>• <strong>Retención:</strong> {getCurrentDteInfo().retencion.applies ? `${(getCurrentDteInfo().retencion.rate * 100).toFixed(0)}%` : 'No aplica'}</div>
                   {getCurrentDteInfo().minAmount > 0 && (
@@ -1162,20 +1162,20 @@ const DTEManager = () => {
 
               <TaxCalculator
                 items={dteData?.cuerpoDocumento || []}
-                tipoDte={getCurrentDteType()} // 🆕 Pasar tipo DTE
+                tipoDte={getCurrentDteType()}
                 onCalculationChange={handleCalculationChange}
               />
               <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <button
                   onClick={() => setActiveStep(1)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Volver
                 </button>
                 <button
                   onClick={() => setActiveStep(3)}
                   disabled={!canProceedToNextStep(2)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {getContinueButtonText(2)}
                 </button>
@@ -1185,7 +1185,7 @@ const DTEManager = () => {
 
           {/* Paso 3: Firma y QR */}
           {activeStep === 3 && (
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               <SignatureQRManager
                 dteData={dteData}
                 onDocumentSigned={handleDocumentSigned}
@@ -1194,14 +1194,14 @@ const DTEManager = () => {
               <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <button
                   onClick={() => setActiveStep(2)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Volver
                 </button>
                 <button
                   onClick={() => setActiveStep(4)}
                   disabled={!canProceedToNextStep(3)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {getContinueButtonText(3)}
                 </button>
@@ -1211,67 +1211,33 @@ const DTEManager = () => {
 
           {/* Paso 4: Revisión Final */}
           {activeStep === 4 && (
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               {/* Vista previa del documento */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-blue-600" />
-                  Vista Previa del Documento
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 lg:p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  Vista Previa del DTE
                 </h3>
-
-                <div className="mb-6">
-                  <p className="text-gray-600 mb-4">
-                    Vista previa visual del documento que se enviará.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                    <button
-                      onClick={handlePrintPreview}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                    >
-                      <Printer className="w-4 h-4" />
-                      Imprimir Preview
-                    </button>
-                    <button
-                      onClick={() => setActiveStep(1)}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Editar Documento
-                    </button>
-                  </div>
-                </div>
-
-                <div className="border border-gray-300 rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-300">
-                    <h4 className="font-medium text-gray-900">Vista Previa - {getCurrentDteInfo().name}</h4>
-                  </div>
-                  <div className="p-4 bg-gray-100 max-h-96 overflow-x-auto overflow-y-auto">
-                    {getPreviewData() && (
-                      <div 
-                        ref={previewRef} 
-                        className="min-w-[320px] sm:min-w-0"
-                      >
-                        <FacturaPreview
-                          {...getPreviewData()}
-                        />
-                      </div>
-                    )}
-                  </div>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 overflow-x-auto">
+                  <FacturaPreview
+                    ref={previewRef}
+                    data={getPreviewData()}
+                    className="w-full min-w-[600px]"
+                  />
                 </div>
               </div>
 
               {/* Navegación */}
               <div className="flex flex-col sm:flex-row justify-between gap-3">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => setActiveStep(3)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Volver
                   </button>
                   <button
                     onClick={() => setActiveStep(5)}
-                    className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
                     🧪 Llenar datos de prueba
                   </button>
@@ -1279,7 +1245,7 @@ const DTEManager = () => {
                 <button
                   onClick={() => setActiveStep(5)}
                   disabled={!canProceedToNextStep(4)}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {getContinueButtonText(4)}
                 </button>
@@ -1289,34 +1255,34 @@ const DTEManager = () => {
 
           {/* Paso 5: Envío */}
           {activeStep === 5 && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="space-y-4 lg:space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 lg:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <Send className="w-5 h-5 text-blue-600" />
                   Enviar DTE al Ministerio de Hacienda
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Resumen del Documento</h4>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Resumen del Documento</h4>
                     <dl className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <dt className="text-gray-600">Tipo de Documento:</dt>
-                        <dd className="text-gray-900">{getCurrentDteInfo().name}</dd>
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <dt className="text-gray-600 dark:text-gray-400">Tipo de Documento:</dt>
+                        <dd className="text-gray-900 dark:text-white">{getCurrentDteInfo().name}</dd>
                       </div>
-                      <div className="flex justify-between">
-                        <dt className="text-gray-600">Código de Generación:</dt>
-                        <dd className="text-gray-900 font-mono text-xs">{dteData?.identificacion?.codigoGeneracion}</dd>
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <dt className="text-gray-600 dark:text-gray-400">Código de Generación:</dt>
+                        <dd className="text-gray-900 dark:text-white font-mono text-xs break-all">{dteData?.identificacion?.codigoGeneracion}</dd>
                       </div>
-                      <div className="flex justify-between">
-                        <dt className="text-gray-600">Total a Pagar:</dt>
-                        <dd className="text-gray-900 font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <dt className="text-gray-600 dark:text-gray-400">Total a Pagar:</dt>
+                        <dd className="text-gray-900 dark:text-white font-semibold">
                           ${(dteData?.resumen?.totalPagar || dteData?.resumen?.valorTotal || 0).toFixed(2)}
                         </dd>
                       </div>
-                      <div className="flex justify-between">
-                        <dt className="text-gray-600">Estado:</dt>
-                        <dd className="text-gray-900">
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <dt className="text-gray-600 dark:text-gray-400">Estado:</dt>
+                        <dd className="text-gray-900 dark:text-white">
                           {signedDocument?.estado || 'Listo para enviar'}
                         </dd>
                       </div>
@@ -1397,55 +1363,55 @@ const DTEManager = () => {
         </div>
         
         {/* Panel lateral */}
-        <div className="space-y-6 mt-8 lg:mt-0">
-          {/* 🆕 Información del DTE actual */}
+        <div className="xl:col-span-1 space-y-4 lg:space-y-6">
+          {/* Información del DTE actual */}
           {dteData && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Documento Actual</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Documento Actual</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tipo:</span>
-                  <span className="font-medium text-blue-600">{getCurrentDteInfo().name}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Tipo:</span>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">{getCurrentDteInfo().name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Código:</span>
-                  <span className="font-mono">{getCurrentDteType()}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Código:</span>
+                  <span className="font-mono text-gray-900 dark:text-white">{getCurrentDteType()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">IVA:</span>
-                  <span className={getCurrentDteInfo().iva.applies ? "text-green-600" : "text-gray-500"}>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">IVA:</span>
+                  <span className={getCurrentDteInfo().iva.applies ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}>
                     {getCurrentDteInfo().iva.applies ? `${(getCurrentDteInfo().iva.rate * 100).toFixed(0)}%` : 'No aplica'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Retención:</span>
-                  <span className={getCurrentDteInfo().retencion.applies ? "text-orange-600" : "text-gray-500"}>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Retención:</span>
+                  <span className={getCurrentDteInfo().retencion.applies ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}>
                     {getCurrentDteInfo().retencion.applies ? `${(getCurrentDteInfo().retencion.rate * 100).toFixed(0)}%` : 'No aplica'}
                   </span>
                 </div>
                 {calculations && (
                   <>
-                    <hr className="my-3" />
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal:</span>
-                      <span className="font-medium">${calculations.subTotalVentas?.toFixed(2) || '0.00'}</span>
+                    <hr className="my-3 border-gray-200 dark:border-gray-600" />
+                    <div className="flex flex-col sm:flex-row sm:justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">${calculations.subTotalVentas?.toFixed(2) || '0.00'}</span>
                     </div>
                     {calculations.iva > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">IVA:</span>
-                        <span className="font-medium text-green-600">+${calculations.iva.toFixed(2)}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">IVA:</span>
+                        <span className="font-medium text-green-600 dark:text-green-400">+${calculations.iva.toFixed(2)}</span>
                       </div>
                     )}
                     {calculations.reteRenta > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Retención:</span>
-                        <span className="font-medium text-orange-600">-${calculations.reteRenta.toFixed(2)}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Retención:</span>
+                        <span className="font-medium text-orange-600 dark:text-orange-400">-${calculations.reteRenta.toFixed(2)}</span>
                       </div>
                     )}
-                    <hr className="my-2" />
-                    <div className="flex justify-between font-semibold">
-                      <span>Total:</span>
-                      <span className="text-lg">
+                    <hr className="my-2 border-gray-200 dark:border-gray-600" />
+                    <div className="flex flex-col sm:flex-row sm:justify-between font-semibold">
+                      <span className="text-gray-900 dark:text-white">Total:</span>
+                      <span className="text-lg text-gray-900 dark:text-white">
                         ${(calculations.totalPagar || calculations.dteSpecificFields?.valorTotal || 0).toFixed(2)}
                       </span>
                     </div>
@@ -1456,13 +1422,13 @@ const DTEManager = () => {
           )}
 
           {/* Acciones rápidas */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h3>
-            <div className="space-y-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
               <button
                 onClick={() => setActiveStep(4)}
                 disabled={!signedDocument}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Eye className="w-4 h-4" />
                 Vista Previa
@@ -1470,7 +1436,7 @@ const DTEManager = () => {
               <button
                 onClick={handleGenerateJSON}
                 disabled={!dteData}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 Generar JSON
@@ -1478,7 +1444,7 @@ const DTEManager = () => {
               <button
                 onClick={handleValidateSchema}
                 disabled={!generatedJSON}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <CheckCircle className="w-4 h-4" />
                 Validar Esquema
@@ -1486,7 +1452,7 @@ const DTEManager = () => {
               <button
                 onClick={downloadDTEJson}
                 disabled={!dteData}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Descargar JSON
@@ -1495,20 +1461,20 @@ const DTEManager = () => {
           </div>
           
           {/* Estado del proceso */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado del Proceso</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Estado del Proceso</h3>
             <div className="space-y-3">
               {steps.map((step) => (
                 <div key={step.number} className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${activeStep > step.number
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       : activeStep === step.number
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-500'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                     }`}>
                     {activeStep > step.number ? '✓' : step.number}
                   </div>
-                  <span className={`text-sm ${activeStep >= step.number ? 'text-gray-900' : 'text-gray-500'
+                  <span className={`text-sm ${activeStep >= step.number ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
                     }`}>
                     {step.title}
                   </span>
@@ -1517,112 +1483,33 @@ const DTEManager = () => {
             </div>
           </div>
           
-          {/* 🆕 JSON Generado y Validación */}
+          {/* JSON Generado y Validación */}
           {generatedJSON && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">JSON Generado</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">JSON Generado</h3>
               <div className="space-y-3">
-                <div className="bg-gray-50 rounded p-3 max-h-60 overflow-y-auto">
-                  <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded p-3 max-h-60 overflow-y-auto">
+                  <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                     {generatedJSON.length > 1000 ? generatedJSON.substring(0, 1000) + '...' : generatedJSON}
                   </pre>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => navigator.clipboard.writeText(generatedJSON)}
-                    className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                    className="flex-1 px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                   >
-                    Copiar JSON
+                    Copiar
                   </button>
                   <button
-                    onClick={() => {
-                      const newWindow = window.open('', '_blank');
-                      newWindow.document.write(`
-                        <html>
-                          <head>
-                            <title>JSON Completo - DTE ${getCurrentDteType()}</title>
-                            <style>
-                              body { font-family: monospace; padding: 20px; background: #f5f5f5; }
-                              pre { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                            </style>
-                          </head>
-                          <body>
-                            <h2>JSON Completo - DTE ${getCurrentDteType()}</h2>
-                            <pre>${generatedJSON}</pre>
-                          </body>
-                        </html>
-                      `);
-                    }}
-                    className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                    onClick={downloadDTEJson}
+                    className="flex-1 px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                   >
-                    Ver Completo
-                  </button>
-                  <button
-                    onClick={() => setGeneratedJSON('')}
-                    className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                  >
-                    Limpiar
+                    Descargar
                   </button>
                 </div>
               </div>
             </div>
           )}
-          
-          {/* 🆕 Información específica del tipo DTE */}
-          <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">
-              {dteData ? `Información - ${getCurrentDteInfo().name}` : 'Información General'}
-            </h3>
-            <ul className="text-xs text-blue-800 space-y-1">
-              {dteData ? (
-                <>
-                  <li>• Estructura: {getCurrentDteInfo().structure}</li>
-                  <li>• Schema: {CATALOGS.TIPOS_DTE.find(t => t.codigo === getCurrentDteType())?.esquema || 'N/A'}</li>
-                  <li>• <strong>Validación:</strong> ✅ Implementada</li>
-                </>
-              ) : (
-                <>
-                  <li>• Seleccione el tipo de DTE en el formulario</li>
-                  <li>• Cada tipo tiene reglas específicas</li>
-                  <li>• Los cálculos se ajustan automáticamente</li>
-                  <li>• <strong>Validación:</strong> ✅ Implementada</li>
-                </>
-              )}
-              <li>• Ambiente: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
-            </ul>
-          </div>
-
-          {/* Panel de campos requeridos pendientes - MOVIDO AL FINAL */}
-          {dteData && formValidation.missingFields && formValidation.missingFields.length > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertCircle className="w-5 h-5 text-orange-600" />
-                <span className="font-medium text-orange-800">Campos Requeridos Pendientes</span>
-              </div>
-              <div className="text-sm text-orange-700">
-                <p className="mb-2">Complete los siguientes campos para continuar al siguiente paso:</p>
-                <ul className="space-y-1">
-                  {formValidation.missingFields.slice(0, 5).map((field, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <span className="text-orange-500">•</span>
-                      <span>{getFieldDisplayName(field)}</span>
-                    </li>
-                  ))}
-                  {formValidation.missingFields.length > 5 && (
-                    <li className="text-orange-600 italic">
-                      ... y {formValidation.missingFields.length - 5} campos más
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          )}
-          {/* Panel de Debug Info - MOVIDO AL FINAL */}
-          <DebugInfo
-            selectedTipoDte={dteData?.identificacion?.tipoDte || '01'}
-            DteComponent={null}
-            validationState={formValidation}
-          />
         </div>
       </div>
 

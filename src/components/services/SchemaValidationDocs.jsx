@@ -11,7 +11,8 @@ import {
   Info,
   Code,
   Download,
-  Eye
+  Eye,
+  AlertTriangle
 } from 'lucide-react';
 import { schemaValidator } from '../../services/schemaValidator.js';
 
@@ -41,28 +42,28 @@ const SchemaValidationDocs = () => {
           del Ministerio de Hacienda de El Salvador.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold text-blue-900">Validación en Tiempo Real</div>
-            <div className="text-blue-700">Verificación automática mientras editas</div>
+          <div className="bg-white dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
+            <div className="font-semibold text-blue-900 dark:text-blue-200">Validación en Tiempo Real</div>
+            <div className="text-blue-700 dark:text-blue-300">Verificación automática mientras editas</div>
           </div>
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold text-blue-900">Esquemas Oficiales</div>
-            <div className="text-blue-700">Basado en especificaciones MH</div>
+          <div className="bg-white dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
+            <div className="font-semibold text-blue-900 dark:text-blue-200">Esquemas Oficiales</div>
+            <div className="text-blue-700 dark:text-blue-300">Basado en especificaciones MH</div>
           </div>
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold text-blue-900">Reportes Detallados</div>
-            <div className="text-blue-700">Análisis completo de errores</div>
+          <div className="bg-white dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
+            <div className="font-semibold text-blue-900 dark:text-blue-200">Reportes Detallados</div>
+            <div className="text-blue-700 dark:text-blue-300">Análisis completo de errores</div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-500" />
             Características
           </h4>
-          <ul className="space-y-2 text-gray-700">
+          <ul className="space-y-2 text-gray-700 dark:text-gray-300">
             <li>• Validación contra esquemas JSON oficiales</li>
             <li>• Detección de campos faltantes</li>
             <li>• Validación de formatos y tipos</li>
@@ -73,12 +74,12 @@ const SchemaValidationDocs = () => {
           </ul>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-orange-500" />
             Tipos de Validación
           </h4>
-          <ul className="space-y-2 text-gray-700">
+          <ul className="space-y-2 text-gray-700 dark:text-gray-300">
             <li>• <strong>Esquema:</strong> Estructura JSON oficial</li>
             <li>• <strong>Cálculos:</strong> Impuestos y totales</li>
             <li>• <strong>Negocio:</strong> Reglas específicas DTE</li>
@@ -93,24 +94,24 @@ const SchemaValidationDocs = () => {
 
   const renderSchemas = () => (
     <div className="space-y-6">
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5" />
           Esquemas Disponibles ({schemaInfo.length})
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {schemaInfo.map((schema) => (
-            <div key={schema.tipoDte} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+            <div key={schema.tipoDte} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 dark:text-white">
                   {schema.tipoDte}
                 </span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
                   {schema.schemaName}
                 </span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 {schema.title}
               </div>
             </div>
@@ -131,25 +132,25 @@ const SchemaValidationDocs = () => {
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Retención</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {schemaInfo.map((schema) => {
                 const dteInfo = schemaValidator.getSchemaInfo(schema.tipoDte);
                 return (
-                  <tr key={schema.tipoDte} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                  <tr key={schema.tipoDte} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">
                       {schema.tipoDte}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
                       {schema.title}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600 font-mono">
+                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 font-mono">
                       {schema.schemaName}
                     </td>
                     <td className="px-4 py-2 text-sm">
                       <span className={`px-2 py-1 rounded text-xs ${
                         dteInfo?.iva?.applies 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200' 
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                       }`}>
                         {dteInfo?.iva?.applies ? `${(dteInfo.iva.rate * 100).toFixed(0)}%` : 'No aplica'}
                       </span>
@@ -157,8 +158,8 @@ const SchemaValidationDocs = () => {
                     <td className="px-4 py-2 text-sm">
                       <span className={`px-2 py-1 rounded text-xs ${
                         dteInfo?.retencion?.applies 
-                          ? 'bg-orange-100 text-orange-800' 
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200' 
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                       }`}>
                         {dteInfo?.retencion?.applies ? `${(dteInfo.retencion.rate * 100).toFixed(0)}%` : 'No aplica'}
                       </span>
@@ -246,25 +247,26 @@ const SchemaValidationDocs = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-500" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
             Tipos de Errores
-          </h4>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li>• <strong>Campos faltantes:</strong> Campos requeridos no presentes</li>
-            <li>• <strong>Formato inválido:</strong> Patrones o tipos incorrectos</li>
-            <li>• <strong>Valores fuera de rango:</strong> Números o fechas inválidas</li>
-            <li>• <strong>Estructura incorrecta:</strong> Objetos o arrays mal formados</li>
-            <li>• <strong>Validaciones específicas:</strong> Reglas de negocio DTE</li>
+          </h3>
+          <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+            <li>• <strong>Campos requeridos:</strong> Campos obligatorios faltantes</li>
+            <li>• <strong>Tipos de datos:</strong> Valores con formato incorrecto</li>
+            <li>• <strong>Enumeraciones:</strong> Valores no permitidos</li>
+            <li>• <strong>Patrones:</strong> Formatos que no coinciden</li>
+            <li>• <strong>Rangos:</strong> Valores fuera de límites</li>
+            <li>• <strong>Dependencias:</strong> Campos relacionados faltantes</li>
           </ul>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-yellow-500" />
             Tipos de Advertencias
           </h4>
-          <ul className="space-y-2 text-sm text-gray-700">
+          <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li>• <strong>Campos opcionales:</strong> Campos recomendados faltantes</li>
             <li>• <strong>Montos mínimos:</strong> Valores por debajo del mínimo</li>
             <li>• <strong>Fechas futuras:</strong> Fechas de emisión futuras</li>
@@ -278,19 +280,19 @@ const SchemaValidationDocs = () => {
 
   const renderComponents = () => (
     <div className="space-y-6">
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Code className="w-5 h-5" />
           Componentes Disponibles
         </h3>
         
         <div className="space-y-6">
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-2">SchemaValidationIndicator</h4>
-            <p className="text-sm text-gray-600 mb-3">
+          <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">SchemaValidationIndicator</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
               Componente visual que muestra el estado de validación en tiempo real
             </p>
-            <div className="bg-gray-50 p-3 rounded text-sm font-mono">
+            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded text-sm font-mono">
               {`<SchemaValidationIndicator 
   dteData={dteData}
   tipoDte="01"

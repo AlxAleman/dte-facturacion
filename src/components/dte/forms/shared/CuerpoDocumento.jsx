@@ -95,12 +95,12 @@ const CuerpoDocumento = ({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{title}</h3>
         <button
           type="button"
           onClick={addNewItem}
-          className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-md hover:bg-green-200 transition-colors flex items-center gap-1"
+          className="w-full sm:w-auto px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm rounded-md hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Agregar Producto
@@ -109,14 +109,14 @@ const CuerpoDocumento = ({
       
       <div className="space-y-4">
         {itemsToRender.map((item, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-gray-900">Producto #{item.numItem}</h4>
+          <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <h4 className="font-medium text-gray-900 dark:text-white">Producto #{item.numItem}</h4>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => duplicateItem(index)}
-                  className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
                   title="Duplicar producto"
                 >
                   <Plus className="w-4 h-4" />
@@ -125,7 +125,7 @@ const CuerpoDocumento = ({
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="p-1 text-red-600 hover:bg-red-100 rounded"
+                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
                     title="Eliminar producto"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -137,7 +137,7 @@ const CuerpoDocumento = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {showCodigo && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Código
                   </label>
                   <input
@@ -145,14 +145,14 @@ const CuerpoDocumento = ({
                     value={item.codigo}
                     onChange={(e) => handleItemChange(index, 'codigo', e.target.value)}
                     placeholder="Código del producto"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 </div>
               )}
               
               {showDescripcion && (
                 <div className={showCodigo ? "md:col-span-2" : "md:col-span-3"}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descripción {requiredFields.includes(`cuerpoDocumento.${index}.descripcion`) && <span className="text-red-500">*</span>}
                   </label>
                   <input
@@ -160,18 +160,18 @@ const CuerpoDocumento = ({
                     value={item.descripcion}
                     onChange={(e) => handleItemChange(index, 'descripcion', e.target.value)}
                     placeholder="Descripción del producto o servicio"
-                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.descripcion`) : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.descripcion`) : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
                     required={requiredFields.includes(`cuerpoDocumento.${index}.descripcion`)}
                   />
                   {isFieldEmpty && isFieldEmpty(`cuerpoDocumento.${index}.descripcion`) && (
-                    <p className="text-sm text-red-600 mt-1">Descripción es requerida</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">Descripción es requerida</p>
                   )}
                 </div>
               )}
               
               {showCantidad && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Cantidad {requiredFields.includes(`cuerpoDocumento.${index}.cantidad`) && <span className="text-red-500">*</span>}
                   </label>
                   <input
@@ -181,18 +181,18 @@ const CuerpoDocumento = ({
                     placeholder="1"
                     min="0"
                     step="0.01"
-                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.cantidad`) : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.cantidad`) : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
                     required={requiredFields.includes(`cuerpoDocumento.${index}.cantidad`)}
                   />
                   {isFieldEmpty && isFieldEmpty(`cuerpoDocumento.${index}.cantidad`) && (
-                    <p className="text-sm text-red-600 mt-1">Cantidad es requerida</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">Cantidad es requerida</p>
                   )}
                 </div>
               )}
               
               {showPrecio && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Precio Unitario {requiredFields.includes(`cuerpoDocumento.${index}.precioUni`) && <span className="text-red-500">*</span>}
                   </label>
                   <input
@@ -202,18 +202,21 @@ const CuerpoDocumento = ({
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.precioUni`) : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+                    className={getFieldClassName ? getFieldClassName(`cuerpoDocumento.${index}.precioUni`) : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
                     required={requiredFields.includes(`cuerpoDocumento.${index}.precioUni`)}
                   />
                   {isFieldEmpty && isFieldEmpty(`cuerpoDocumento.${index}.precioUni`) && (
-                    <p className="text-sm text-red-600 mt-1">Precio unitario es requerido</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">Precio unitario es requerido</p>
                   )}
                 </div>
               )}
-              
+            </div>
+            
+            {/* Segunda fila para descuentos y subtotales */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               {showDescuento && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descuento
                   </label>
                   <input
@@ -223,22 +226,19 @@ const CuerpoDocumento = ({
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 </div>
               )}
               
               {showSubtotal && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Subtotal
                   </label>
-                  <input
-                    type="text"
-                    value={`$${((item.cantidad * item.precioUni) - item.montoDescu).toFixed(2)}`}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed"
-                  />
+                  <div className="px-3 py-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-md font-medium">
+                    ${((item.cantidad * item.precioUni) - item.montoDescu).toFixed(2)}
+                  </div>
                 </div>
               )}
             </div>
@@ -246,13 +246,13 @@ const CuerpoDocumento = ({
         ))}
       </div>
       
-      {showSubtotal && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <div className="text-lg font-semibold text-blue-900">
-            Total General: ${getTotalGeneral().toFixed(2)}
-          </div>
+      {/* Total general */}
+      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <span className="text-lg font-semibold text-blue-900 dark:text-blue-100">Total General:</span>
+          <span className="text-2xl font-bold text-blue-900 dark:text-blue-100">${getTotalGeneral().toFixed(2)}</span>
         </div>
-      )}
+      </div>
     </div>
   );
 };

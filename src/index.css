@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Transiciones suaves para cambios de tema */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Estilos base para modo dark */
+.dark {
+  color-scheme: dark;
+}
+
+/* Scrollbar personalizada para modo dark */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
 
 @keyframes shake {
   0% { transform: translateX(0);}
