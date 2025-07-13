@@ -199,8 +199,9 @@ const FacturaPreview = React.forwardRef(
             <div style={{ padding: "8px" }}>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Nombre:</span> {receptor.nombre}</div>
               <div style={{ display: "flex", gap: "16px", marginBottom: "4px" }}>
-                <div><span style={{ fontWeight: "bold" }}>NIT:</span> {receptor.nit}</div>
-                <div><span style={{ fontWeight: "bold" }}>NRC:</span> {receptor.nrc}</div>
+                <div><span style={{ fontWeight: "bold" }}>NIT:</span> {receptor.nit || '-'}</div>
+                <div><span style={{ fontWeight: "bold" }}>NRC:</span> {receptor.nrc || '-'}</div>
+                <div><span style={{ fontWeight: "bold" }}>DUI:</span> {receptor.dui || '-'}</div>
               </div>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Actividad económica:</span> {receptor.actividad || receptor.descActividad}</div>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Dirección:</span> {formatDireccion(receptor.direccion)}</div>

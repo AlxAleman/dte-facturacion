@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 // Imports según tu estructura actual ✅
-import DteForm from './DteForm';                                    
+import DteFormContainer, { CamposRequeridosPendientes, DebugInfo } from './forms/DteFormContainer';                                    
 import TaxCalculator from '../../calculadora/TaxCalculator';        
 import SignatureQRManager from '../../calculadora/SignatureQRManager';
 import FacturaPreview from './FacturaPreview';                      
@@ -33,7 +33,8 @@ import { useQRGenerator } from '../hooks/useQRGenerator';
 
 import EmpresaConfig from '../config/EmpresaConfig';
 import { apiService } from '../services/apiService';               
-import { CATALOGS, getCatalogValue } from '../data/catalogs';       
+import { CATALOGS, getCatalogValue } from '../data/catalogs';
+import { getEmisorData } from '../../config/empresa';       
 
 
 const DTEManager = () => {
@@ -400,67 +401,17 @@ const DTEManager = () => {
     }, 500);
   };
 
-  // 🆕 NUEVA FUNCIÓN: Llenar datos de prueba para el preview
-  const handleFillTestData = () => {
-    if (!dteData) return;
-
-    const testData = {
-      ...dteData,
-      receptor: {
-        ...dteData.receptor,
-        nombre: "Cliente de Prueba S.A. de C.V.",
-        tipoDocumento: "36",
-        numDocumento: "0614-987654-321-0",
-        nrc: "654321",
-        codActividad: "62010",
-        descActividad: "Programación informática",
-        direccion: {
-          departamento: "06",
-          municipio: "23",
-          complemento: "Calle Test #123, Colonia Centro"
-        },
-        telefono: "2222-4444",
-        correo: "cliente@test.com"
-      },
-      cuerpoDocumento: [
-        {
-          numItem: 1,
-          codigo: "PROD001",
-          descripcion: "Producto de prueba",
-          cantidad: 2,
-          precioUni: 25.00,
-          montoDescu: 0,
-          noSujetas: 0,
-          exentas: 0,
-          gravadas: 50.00
-        },
-        {
-          numItem: 2,
-          codigo: "PROD002",
-          descripcion: "Servicio de consultoría",
-          cantidad: 1,
-          precioUni: 100.00,
-          montoDescu: 10.00,
-          noSujetas: 0,
-          exentas: 0,
-          gravadas: 90.00
-        }
-      ]
-    };
-
-    console.log('🧪 Llenando datos de prueba:', testData);
-    setDteData(testData);
-  };
-
   const getPreviewData = () => {
     if (!dteData) return null;
 
     const tipoDte = getCurrentDteType();
     const dteInfo = getCurrentDteInfo();
 
-    // Extraer datos para el preview en el formato que espera FacturaPreview
+    // Merge de emisor: config + formulario
+    const emisorMerged = { ...getEmisorData(), ...(dteData.emisor || {}) };
+
     const previewData = {
-      emisor: dteData.emisor || {},
+      emisor: emisorMerged,
       receptor: dteData.receptor || {},
       items: dteData.cuerpoDocumento || dteData.items || [],
       resumen: {
@@ -478,7 +429,6 @@ const DTEManager = () => {
       condicionOperacion: dteData.condicionOperacion || 'Contado',
       pagina: 1,
       paginasTotales: 1,
-      // Datos adicionales para debugging
       tipoDte,
       dteInfo,
       calculations,
@@ -637,87 +587,7 @@ const DTEManager = () => {
         horEmi: formData.identificacion?.horEmi || new Date().toTimeString().split(' ')[0],
         tipoMoneda: formData.identificacion?.tipoMoneda || "USD"
       },
-      emisor: {
-        nit: formData.emisor?.nit || "",
-        nrc: formData.emisor?.nrc || "",
-        nombre: formData.emisor?.nombre || "",
-        codActividad: formData.emisor?.codActividad || "",
-        descActividad: formData.emisor?.descActividad || "",
-        nombreComercial: formData.emisor?.nombreComercial || null,
-        // 🆕 Campos específicos para CCF
-        ...(tipoDte === "03" && {
-          tipoEstablecimiento: "01",
-          codEstableMH: "0001",
-          codEstable: "001",
-          codPuntoVentaMH: "0001",
-          codPuntoVenta: "001"
-        }),
-        // 🆕 NUEVO: Campos específicos para Nota de Remisión
-        ...(tipoDte === "04" && {
-          tipoEstablecimiento: "01",
-          codEstableMH: "0001",
-          codEstable: "001",
-          codPuntoVentaMH: "0001",
-          codPuntoVenta: "001"
-        }),
-        // 🆕 NUEVO: Campos específicos para Nota de Crédito
-        ...(tipoDte === "05" && {
-          tipoEstablecimiento: "01"
-        }),
-        // 🆕 NUEVO: Campos específicos para Nota de Débito
-        ...(tipoDte === "06" && {
-          tipoEstablecimiento: "01"
-        }),
-        // 🆕 NUEVO: Campos específicos para Comprobante de Retención
-        ...(tipoDte === "07" && {
-          tipoEstablecimiento: "01",
-          codigoMH: "0001",
-          codigo: "001",
-          puntoVentaMH: "0001",
-          puntoVenta: "001"
-        }),
-        // 🆕 NUEVO: Campos específicos para Comprobante de Liquidación
-        ...(tipoDte === "08" && {
-          tipoEstablecimiento: "01",
-          codEstableMH: "0001",
-          codEstable: "001",
-          codPuntoVentaMH: "0001",
-          codPuntoVenta: "001"
-        }),
-        // 🆕 NUEVO: Campos específicos para Documento Contable de Liquidación
-        ...(tipoDte === "09" && {
-          tipoEstablecimiento: "01",
-          codigoMH: "0001",
-          codigo: "001",
-          puntoVentaMH: "0001",
-          puntoVentaContri: "001"
-        }),
-        // 🆕 NUEVO: Campos específicos para Factura de Exportación
-        ...(tipoDte === "11" && {
-          tipoEstablecimiento: "01",
-          codEstableMH: "0001",
-          codEstable: "001",
-          codPuntoVentaMH: "0001",
-          codPuntoVenta: "001",
-          tipoItemExpor: 1,
-          recintoFiscal: "01",
-          regimen: "1"
-        }),
-        // 🆕 NUEVO: Campos específicos para Factura de Sujeto Excluido
-        ...(tipoDte === "14" && {
-          codEstableMH: "0001",
-          codEstable: "001",
-          codPuntoVentaMH: "0001",
-          codPuntoVenta: "001"
-        }),
-        direccion: {
-          departamento: formData.emisor?.direccion?.departamento || "",
-          municipio: formData.emisor?.direccion?.municipio || "",
-          complemento: formData.emisor?.direccion?.complemento || ""
-        },
-        telefono: formData.emisor?.telefono || "",
-        correo: formData.emisor?.correo || ""
-      },
+      emisor: { ...getEmisorData(), ...(formData.emisor || {}) },
       receptor: tipoDte === "03" ? {
         // 🆕 Estructura específica para CCF (solo NIT)
         nit: formData.receptor?.numDocumento || "",
@@ -1255,41 +1125,11 @@ const DTEManager = () => {
           {/* Paso 1: Formulario DTE */}
           {activeStep === 1 && (
             <div className="space-y-6">
-              <DteForm
+              <DteFormContainer
                 onDataChange={handleDTEDataChange}
                 initialData={dteData}
               />
               
-              {/* 🆕 NUEVO: Resumen de validación del formulario */}
-              {formValidation.missingFields && formValidation.missingFields.length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle className="w-5 h-5 text-orange-600" />
-                    <span className="font-medium text-orange-800">
-                      Campos Requeridos Pendientes
-                    </span>
-                  </div>
-                  <div className="text-sm text-orange-700">
-                    <p className="mb-2">
-                      Complete los siguientes campos para continuar al siguiente paso:
-                    </p>
-                    <ul className="space-y-1">
-                      {formValidation.missingFields.slice(0, 5).map((field, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <span className="text-orange-500">•</span>
-                          <span>{getFieldDisplayName(field)}</span>
-                          </li>
-                        ))}
-                      {formValidation.missingFields.length > 5 && (
-                        <li className="text-orange-600 italic">
-                          ... y {formValidation.missingFields.length - 5} campos más
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                </div>
-              )}
-
               {/* Botón continuar responsive - 🆕 ACTUALIZADO */}
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
@@ -1430,7 +1270,7 @@ const DTEManager = () => {
                     Volver
                   </button>
                   <button
-                    onClick={handleFillTestData}
+                    onClick={() => setActiveStep(5)}
                     className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
                     🧪 Llenar datos de prueba
@@ -1751,6 +1591,38 @@ const DTEManager = () => {
               <li>• Ambiente: {environment === 'production' ? 'Producción' : 'Pruebas'}</li>
             </ul>
           </div>
+
+          {/* Panel de campos requeridos pendientes - MOVIDO AL FINAL */}
+          {dteData && formValidation.missingFields && formValidation.missingFields.length > 0 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="w-5 h-5 text-orange-600" />
+                <span className="font-medium text-orange-800">Campos Requeridos Pendientes</span>
+              </div>
+              <div className="text-sm text-orange-700">
+                <p className="mb-2">Complete los siguientes campos para continuar al siguiente paso:</p>
+                <ul className="space-y-1">
+                  {formValidation.missingFields.slice(0, 5).map((field, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <span className="text-orange-500">•</span>
+                      <span>{getFieldDisplayName(field)}</span>
+                    </li>
+                  ))}
+                  {formValidation.missingFields.length > 5 && (
+                    <li className="text-orange-600 italic">
+                      ... y {formValidation.missingFields.length - 5} campos más
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+          {/* Panel de Debug Info - MOVIDO AL FINAL */}
+          <DebugInfo
+            selectedTipoDte={dteData?.identificacion?.tipoDte || '01'}
+            DteComponent={null}
+            validationState={formValidation}
+          />
         </div>
       </div>
 

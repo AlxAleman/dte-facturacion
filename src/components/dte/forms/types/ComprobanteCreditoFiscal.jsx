@@ -1,14 +1,17 @@
 import React from 'react';
 import { FileText } from 'lucide-react';
-import { CATALOGS } from '../../data/catalogs';
+import { CATALOGS } from '../../../data/catalogs';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
-import { buscarActividadPorCodigo } from '../../data/catalogoActividadEconomica';
+import {
+  actividadesCat019 as actividadesEconomicas,
+  buscarPorCodigo as buscarActividadPorCodigo,
+  buscarPorValor as buscarActividadPorNombre
+} from '../../../data/catalogoActividadEconomica';
 import { 
   catalogoDepartamentos,
   catalogoMunicipios,
   buscarPorCodigo
-} from '../../data/catalogoGeneral';
-import EmisorInfo from '../shared/EmisorInfo';
+} from '../../../data/catalogoGeneral';
 import ReceptorForm from '../shared/ReceptorForm';
 import CuerpoDocumento from '../shared/CuerpoDocumento';
 
@@ -117,6 +120,7 @@ function getInitialData() {
 const ComprobanteCreditoFiscal = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const prevDataRef = React.useRef();
 
   // Campos requeridos específicos para CCF
   const requiredFields = [
@@ -139,15 +143,28 @@ const ComprobanteCreditoFiscal = ({ onDataChange, initialData }) => {
     }
   }, [initialData, isInitialized]);
 
-  // Notificar cambios al componente padre (solo después de inicializar)
+  // Notificar cambios al componente padre SOLO si los datos realmente cambian
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
-      onDataChange(formData);
+      const prev = prevDataRef.current;
+      const curr = formData;
+      // Comparación superficial, puedes mejorar con deepEqual si lo deseas
+      if (JSON.stringify(prev) !== JSON.stringify(curr)) {
+        prevDataRef.current = curr;
+        // Validación básica (puedes mejorar esto)
+        const isValid = requiredFields.every(f => !isFieldEmpty(getNestedValue(curr, f)));
+        const missingFields = requiredFields.filter(f => isFieldEmpty(getNestedValue(curr, f)));
+        const validation = { isValid, missingFields, errors: {} };
+        onDataChange(curr, validation);
+      }
     }
   }, [formData, onDataChange, isInitialized]);
 
   // Obtener valor anidado del objeto
   const getNestedValue = (obj, path) => {
+    if (!path || typeof path !== 'string') {
+      return undefined;
+    }
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
@@ -203,42 +220,24 @@ const ComprobanteCreditoFiscal = ({ onDataChange, initialData }) => {
 
   return (
     <div className="space-y-8">
+      {/* Banner informativo para Comprobante de Crédito Fiscal */}
+      <div className="bg-cyan-100 border border-cyan-300 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <FileText className="h-8 w-8 text-cyan-600" />
+          <div>
+            <h2 className="text-xl font-bold text-cyan-900">📄 Comprobante de Crédito Fiscal (Tipo 03)</h2>
+            <p className="text-cyan-700">Documento para ventas a contribuyentes con crédito fiscal</p>
+          </div>
+        </div>
+      </div>
+
       {/* Información del Emisor */}
-      <EmisorInfo formData={formData} />
+      {/* Eliminar: <EmisorInfo formData={formData} /> */}
 
       {/* Información del Receptor - Específica para CCF */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">Información del Receptor</h3>
-          <button
-            type="button"
-            onClick={() => {
-              // Completar automáticamente campos opcionales
-              const actividadDefault = buscarActividadPorCodigo("62010") || { codigo: "62010", valor: "Programación informática" };
-              const departamentoDefault = buscarPorCodigo(catalogoDepartamentos, "06") || { codigo: "06", valor: "San Salvador" };
-              const municipioDefault = buscarPorCodigo(catalogoMunicipios, "23") || { codigo: "23", valor: "SAN SALVADOR CENTRO" };
-              
-              setFormData(prev => ({
-                ...prev,
-                receptor: {
-                  ...prev.receptor,
-                  codActividad: prev.receptor.codActividad || actividadDefault.codigo,
-                  descActividad: prev.receptor.descActividad || actividadDefault.valor,
-                  telefono: prev.receptor.telefono || "0000-0000",
-                  correo: prev.receptor.correo || "cliente@ejemplo.com",
-                  direccion: {
-                    ...prev.receptor.direccion,
-                    departamento: prev.receptor.direccion?.departamento || departamentoDefault.codigo,
-                    municipio: prev.receptor.direccion?.municipio || municipioDefault.codigo,
-                    complemento: prev.receptor.direccion?.complemento || "Dirección por defecto"
-                  }
-                }
-              }));
-            }}
-            className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-md hover:bg-blue-200 transition-colors"
-          >
-            🤖 Completar automáticamente
-          </button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -471,22 +470,6 @@ const ComprobanteCreditoFiscal = ({ onDataChange, initialData }) => {
               <option value="CRC">CRC - Colón Costarricense</option>
             </select>
           </div>
-        </div>
-      </div>
-
-      {/* Información específica de CCF */}
-      <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
-          <FileText className="w-4 h-4" />
-          Información de Comprobante de Crédito Fiscal
-        </h4>
-        <div className="text-sm text-blue-800 space-y-1">
-          <p>• <strong>Comprobante de Crédito Fiscal:</strong> Para ventas a empresas</p>
-          <p>• <strong>IVA:</strong> 13% con derecho a crédito fiscal</p>
-          <p>• <strong>Incluye:</strong> IVA Percibido además del retenido</p>
-          <p>• <strong>Receptor:</strong> Solo empresas con NIT y NRC</p>
-          <p>• <strong>Campos específicos:</strong> ivaPerci1 para IVA percibido</p>
-          <p>• <strong>Versión:</strong> 3 (esquema más reciente)</p>
         </div>
       </div>
     </div>

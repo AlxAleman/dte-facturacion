@@ -16,14 +16,18 @@ const CuerpoDocumento = ({
   title = "Productos/Servicios"
 }) => {
 
+  // Asegurar que formData y cuerpoDocumento existan
+  const safeFormData = formData || {};
+  const safeCuerpoDocumento = safeFormData.cuerpoDocumento || [];
+
   // Manejar cambios en ítems del cuerpo del documento
   const handleItemChange = (index, field, value) => {
-    const updatedCuerpoDocumento = formData.cuerpoDocumento.map((item, i) => 
+    const updatedCuerpoDocumento = safeCuerpoDocumento.map((item, i) => 
       i === index ? { ...item, [field]: value } : item
     );
 
     onDataChange({
-      ...formData,
+      ...safeFormData,
       cuerpoDocumento: updatedCuerpoDocumento
     });
   };
@@ -31,7 +35,7 @@ const CuerpoDocumento = ({
   // Agregar nuevo ítem
   const addNewItem = () => {
     const newItem = {
-      numItem: formData.cuerpoDocumento.length + 1,
+      numItem: safeCuerpoDocumento.length + 1,
       codigo: "",
       descripcion: "",
       cantidad: 1,
@@ -40,20 +44,20 @@ const CuerpoDocumento = ({
     };
 
     onDataChange({
-      ...formData,
-      cuerpoDocumento: [...formData.cuerpoDocumento, newItem]
+      ...safeFormData,
+      cuerpoDocumento: [...safeCuerpoDocumento, newItem]
     });
   };
 
   // Remover ítem
   const removeItem = (index) => {
-    if (formData.cuerpoDocumento.length > 1) {
-      const updatedCuerpoDocumento = formData.cuerpoDocumento
+    if (safeCuerpoDocumento.length > 1) {
+      const updatedCuerpoDocumento = safeCuerpoDocumento
         .filter((_, i) => i !== index)
         .map((item, i) => ({ ...item, numItem: i + 1 }));
 
       onDataChange({
-        ...formData,
+        ...safeFormData,
         cuerpoDocumento: updatedCuerpoDocumento
       });
     }
@@ -61,21 +65,33 @@ const CuerpoDocumento = ({
 
   // Duplicar ítem
   const duplicateItem = (index) => {
-    const itemToDuplicate = { ...formData.cuerpoDocumento[index] };
-    itemToDuplicate.numItem = formData.cuerpoDocumento.length + 1;
+    const itemToDuplicate = { ...safeCuerpoDocumento[index] };
+    itemToDuplicate.numItem = safeCuerpoDocumento.length + 1;
     
     onDataChange({
-      ...formData,
-      cuerpoDocumento: [...formData.cuerpoDocumento, itemToDuplicate]
+      ...safeFormData,
+      cuerpoDocumento: [...safeCuerpoDocumento, itemToDuplicate]
     });
   };
 
   // Calcular total general
   const getTotalGeneral = () => {
-    return formData.cuerpoDocumento.reduce((total, item) => {
+    return safeCuerpoDocumento.reduce((total, item) => {
       return total + ((item.cantidad * item.precioUni) - item.montoDescu);
     }, 0);
   };
+
+  // Si no hay ítems, mostrar al menos uno inicial
+  const itemsToRender = safeCuerpoDocumento.length > 0 ? safeCuerpoDocumento : [
+    {
+      numItem: 1,
+      codigo: "",
+      descripcion: "",
+      cantidad: 1,
+      precioUni: 0,
+      montoDescu: 0
+    }
+  ];
 
   return (
     <div className="mb-8">
@@ -92,7 +108,7 @@ const CuerpoDocumento = ({
       </div>
       
       <div className="space-y-4">
-        {formData.cuerpoDocumento.map((item, index) => (
+        {itemsToRender.map((item, index) => (
           <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium text-gray-900">Producto #{item.numItem}</h4>
@@ -105,7 +121,7 @@ const CuerpoDocumento = ({
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-                {formData.cuerpoDocumento.length > 1 && (
+                {itemsToRender.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeItem(index)}

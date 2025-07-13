@@ -1,31 +1,47 @@
 // src/components/dte/ReceptorForm.jsx
 import { useState } from "react";
 import { FAKE_RECEIVERS } from "../../fakeReceivers"; // Ajusta el path
+import { CATALOGS } from "../../data/catalogs";
 
 export default function ReceptorForm({ value, setValue }) {
   const [buscando, setBuscando] = useState(false);
 
-  const handleDocumentoChange = e => {
-    const doc = e.target.value;
-    setValue({ ...value, documento: doc });
+  const handleTipoDocumentoChange = e => {
+    setValue({ ...value, tipoDocumento: e.target.value, numDocumento: "" });
+  };
+
+  const handleNumDocumentoChange = e => {
+    setValue({ ...value, numDocumento: e.target.value });
 
     // Busca en la fakeDB
-    const found = FAKE_RECEIVERS.find(r => r.documento === doc);
-
+    const found = FAKE_RECEIVERS.find(r => r.documento === e.target.value);
     if (found) {
       setBuscando(true);
       setTimeout(() => {
-        setValue(found); // Llena todos los campos del receptor
+        setValue({
+          ...value,
+          tipoDocumento: value.tipoDocumento,
+          numDocumento: e.target.value,
+          nombre: found.nombre,
+          direccion: found.direccion,
+          correo: found.correo,
+          telefono: found.telefono
+        });
         setBuscando(false);
-      }, 500); // Simula un fetch lento
+      }, 500);
     }
   };
 
-  // Resto de los campos del receptor
   return (
     <div>
-      <label>Documento:</label>
-      <input value={value.documento || ""} onChange={handleDocumentoChange} />
+      <label>Tipo de documento:</label>
+      <select value={value.tipoDocumento || "36"} onChange={handleTipoDocumentoChange}>
+        {CATALOGS.TIPOS_DOCUMENTO_IDENTIFICACION.map(opt => (
+          <option key={opt.codigo} value={opt.codigo}>{opt.valor}</option>
+        ))}
+      </select>
+      <label>Número de documento:</label>
+      <input value={value.numDocumento || ""} onChange={handleNumDocumentoChange} />
       <label>Nombre:</label>
       <input
         value={value.nombre || ""}

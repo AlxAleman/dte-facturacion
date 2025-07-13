@@ -41,22 +41,50 @@ export const EMPRESA_CONFIG = {
 
 // Función para obtener los datos del emisor en formato DTE
 export const getEmisorData = () => {
+  // Intentar cargar configuración guardada en localStorage
+  const savedConfig = localStorage.getItem('empresaConfig');
+  let configToUse = EMPRESA_CONFIG;
+  
+  if (savedConfig) {
+    try {
+      const parsedConfig = JSON.parse(savedConfig);
+      configToUse = { ...EMPRESA_CONFIG, ...parsedConfig }; // Merge con configuración por defecto
+    } catch (error) {
+      console.error('❌ Error al cargar configuración desde localStorage:', error);
+      configToUse = EMPRESA_CONFIG;
+    }
+  }
+  
   return {
-    nit: EMPRESA_CONFIG.nit,
-    nombre: EMPRESA_CONFIG.nombre,
-    nombreComercial: EMPRESA_CONFIG.nombreComercial,
-    descActividad: EMPRESA_CONFIG.descActividad,
-    direccion: EMPRESA_CONFIG.direccion,
-    telefono: EMPRESA_CONFIG.telefono,
-    correo: EMPRESA_CONFIG.correo,
-    nrc: EMPRESA_CONFIG.nrc
+    nit: configToUse.nit,
+    nombre: configToUse.nombre,
+    nombreComercial: configToUse.nombreComercial,
+    descActividad: configToUse.descActividad,
+    direccion: configToUse.direccion,
+    telefono: configToUse.telefono,
+    correo: configToUse.correo,
+    nrc: configToUse.nrc
   };
 };
 
 // Función para validar que la configuración esté completa
 export const validarConfiguracionEmpresa = () => {
+  // Intentar cargar configuración guardada en localStorage
+  const savedConfig = localStorage.getItem('empresaConfig');
+  let configToUse = EMPRESA_CONFIG;
+  
+  if (savedConfig) {
+    try {
+      const parsedConfig = JSON.parse(savedConfig);
+      configToUse = { ...EMPRESA_CONFIG, ...parsedConfig }; // Merge con configuración por defecto
+    } catch (error) {
+      console.error('❌ Error al cargar configuración desde localStorage:', error);
+      configToUse = EMPRESA_CONFIG;
+    }
+  }
+  
   const camposRequeridos = ['nombre', 'nit'];
-  const camposFaltantes = camposRequeridos.filter(campo => !EMPRESA_CONFIG[campo]);
+  const camposFaltantes = camposRequeridos.filter(campo => !configToUse[campo]);
   
   if (camposFaltantes.length > 0) {
     console.warn('⚠️ Campos de empresa faltantes:', camposFaltantes);

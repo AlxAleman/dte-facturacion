@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FileText, AlertCircle, Info } from 'lucide-react';
-import { CATALOGS } from '../data/catalogs';
+import { CATALOGS } from '../../data/catalogs';
 
 // Importar componentes específicos por tipo de DTE
 import {
@@ -151,21 +151,140 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
   const DteComponent = DTE_COMPONENTS[selectedTipoDte];
   const dteInfo = DTE_INFO[selectedTipoDte];
 
+  // Debug: Log del componente que se va a renderizar
+  console.log('🎯 Renderizando componente para tipo DTE:', selectedTipoDte, 'Componente:', DteComponent?.name);
+
   // Manejar cambio de tipo de DTE
   const handleTipoDteChange = (newTipoDte) => {
+    console.log('🔄 Cambiando tipo de DTE de', selectedTipoDte, 'a', newTipoDte);
     setSelectedTipoDte(newTipoDte);
-    // Limpiar datos del formulario al cambiar tipo
-    setFormData(null);
+    
+    // Crear datos iniciales para el nuevo tipo de DTE
+    const initialDataWithTipoDte = {
+      identificacion: {
+        tipoDte: newTipoDte,
+        // Puedes agregar aquí otros campos de identificacion si lo requieren los formularios
+      },
+      condicionOperacion: '',
+      emisor: {},
+      receptor: {},
+      cuerpoDocumento: [
+        {
+          numItem: 1,
+          codigo: "",
+          descripcion: "",
+          cantidad: 1,
+          precioUni: 0,
+          montoDescu: 0
+        }
+      ],
+      resumen: {},
+      
+      // Propiedades específicas para NotaRemision (Tipo 04)
+      documentoRelacionado: [],
+      ventaTercero: {
+        nit: '',
+        nombre: '',
+        codActividad: '',
+        descActividad: '',
+        direccion: {
+          departamento: '',
+          municipio: '',
+          complemento: ''
+        }
+      },
+      
+      // Propiedades específicas para NotaCredito (Tipo 05)
+      tipoNota: '',
+      
+      // Propiedades específicas para NotaDebito (Tipo 06)
+      tipoNotaDebito: '',
+      
+      // Propiedades específicas para ComprobanteRetencion (Tipo 07)
+      totalSujetoRetencion: 0,
+      totalIVAretenido: 0,
+      
+      // Propiedades específicas para ComprobanteLiquidacion (Tipo 08)
+      ventasPorTipo: [],
+      ivaPercibido: 0,
+      
+      // Propiedades específicas para DocumentoContableLiquidacion (Tipo 09)
+      periodoLiquidacion: '',
+      ivaPercibido2: 0,
+      
+      // Propiedades específicas para FacturaExportacion (Tipo 11)
+      paisDestino: '',
+      incoterms: '',
+      flete: 0,
+      seguro: 0,
+      
+      // Propiedades específicas para FacturaSujetoExcluido (Tipo 14)
+      sujetoExcluido: {
+        nit: '',
+        nombre: '',
+        actividad: '',
+        direccion: {
+          departamento: '',
+          municipio: '',
+          complemento: ''
+        }
+      },
+      
+      // Propiedades específicas para ComprobanteDonacion (Tipo 15)
+      donatario: {
+        nit: '',
+        nombre: ''
+      },
+      donante: {
+        nit: '',
+        nombre: ''
+      },
+      tipoDonacion: '',
+      
+      // Propiedades comunes adicionales
+      extension: {
+        nombEntrega: '',
+        docuEntrega: '',
+        nombRecibe: '',
+        docuRecibe: '',
+        observaciones: ''
+      },
+      apendice: []
+    };
+    
+    // Establecer los datos iniciales inmediatamente para que el componente hijo los reciba
+    setFormData(initialDataWithTipoDte);
     setValidationState({
       isValid: false,
       missingFields: [],
       errors: {}
     });
+    
+    // Notificar inmediatamente el cambio de tipo al componente padre
+    if (onDataChange) {
+      onDataChange(initialDataWithTipoDte, {
+        isValid: false,
+        missingFields: [],
+        errors: {}
+      });
+    }
   };
 
   // Manejar cambios en los datos del formulario
   const handleFormDataChange = (data, validation = null) => {
-    setFormData(data);
+    // Solo modificar los datos si el tipo de DTE no está presente o es diferente
+    let dataToUse = data;
+    if (!data?.identificacion?.tipoDte || data.identificacion.tipoDte !== selectedTipoDte) {
+      dataToUse = {
+        ...data,
+        identificacion: {
+          ...data?.identificacion,
+          tipoDte: selectedTipoDte
+        }
+      };
+    }
+    
+    setFormData(dataToUse);
     
     if (validation) {
       setValidationState(validation);
@@ -173,7 +292,7 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
 
     // Notificar al componente padre
     if (onDataChange) {
-      onDataChange(data, validation);
+      onDataChange(dataToUse, validation);
     }
   };
 
@@ -185,12 +304,12 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
     }
   }, [initialData]);
 
-  // Efecto para manejar cambios en el tipo de DTE inicial
-  useEffect(() => {
-    if (tipoDte && tipoDte !== selectedTipoDte) {
-      setSelectedTipoDte(tipoDte);
-    }
-  }, [tipoDte, selectedTipoDte]);
+  // Efecto para manejar cambios en el tipo de DTE inicial - ELIMINADO porque causa problemas
+  // useEffect(() => {
+  //   if (tipoDte && tipoDte !== selectedTipoDte) {
+  //     setSelectedTipoDte(tipoDte);
+  //   }
+  // }, [tipoDte, selectedTipoDte]);
 
   // Renderizar componente de error si no existe el tipo de DTE
   if (!DteComponent) {
@@ -261,65 +380,55 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
             </div>
           </div>
         </div>
-
-        {/* Información del tipo seleccionado */}
-        {dteInfo && (
-          <div className="mt-4 p-3 bg-white border border-gray-200 rounded-md">
-            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              Información del Tipo DTE:
-            </h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>• <strong>{dteInfo.title}:</strong> {dteInfo.description}</p>
-              <p>• <strong>IVA:</strong> {dteInfo.iva}</p>
-              <p>• <strong>Retención:</strong> {dteInfo.retencion}</p>
-              <p>• <strong>Receptor:</strong> {dteInfo.receptor}</p>
-              <p>• <strong>NRC:</strong> {dteInfo.nrc}</p>
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Indicador de validación */}
-      {validationState.missingFields.length > 0 && (
-        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-5 h-5 text-yellow-600" />
-            <h4 className="text-sm font-medium text-yellow-800">
-              Campos requeridos faltantes ({validationState.missingFields.length})
-            </h4>
-          </div>
-          <ul className="text-sm text-yellow-700 space-y-1">
-            {validationState.missingFields.slice(0, 5).map((field, index) => (
-              <li key={index}>• {field}</li>
-            ))}
-            {validationState.missingFields.length > 5 && (
-              <li>• ... y {validationState.missingFields.length - 5} campos más</li>
-            )}
-          </ul>
-        </div>
-      )}
 
       {/* Renderizar el componente específico del tipo de DTE */}
       <DteComponent
+        key={`dte-${selectedTipoDte}`}
         onDataChange={handleFormDataChange}
         initialData={formData}
       />
-
-      {/* Debug en modo desarrollo */}
-      {import.meta.env.MODE === 'development' && (
-        <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-md">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Info:</h4>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p><strong>Tipo DTE:</strong> {selectedTipoDte}</p>
-            <p><strong>Componente:</strong> {DteComponent.name}</p>
-            <p><strong>Válido:</strong> {validationState.isValid ? 'Sí' : 'No'}</p>
-            <p><strong>Campos faltantes:</strong> {validationState.missingFields.length}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
+
+// NUEVO: Exportar panel de campos requeridos pendientes
+export function CamposRequeridosPendientes({ missingFields }) {
+  if (!missingFields || missingFields.length === 0) return null;
+  return (
+    <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertCircle className="w-5 h-5 text-yellow-600" />
+        <h4 className="text-sm font-medium text-yellow-800">
+          Campos requeridos faltantes ({missingFields.length})
+        </h4>
+      </div>
+      <ul className="text-sm text-yellow-700 space-y-1">
+        {missingFields.slice(0, 5).map((field, index) => (
+          <li key={index}>• {field}</li>
+        ))}
+        {missingFields.length > 5 && (
+          <li>• ... y {missingFields.length - 5} campos más</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+// NUEVO: Exportar panel de debug info
+export function DebugInfo({ selectedTipoDte, DteComponent, validationState }) {
+  if (import.meta.env.MODE !== 'development') return null;
+  return (
+    <div className="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-md">
+      <h4 className="text-sm font-medium text-gray-700 mb-2">Debug Info:</h4>
+      <div className="text-xs text-gray-600 space-y-1">
+        <p><strong>Tipo DTE:</strong> {selectedTipoDte}</p>
+        <p><strong>Componente:</strong> {DteComponent?.name}</p>
+        <p><strong>Válido:</strong> {validationState.isValid ? 'Sí' : 'No'}</p>
+        <p><strong>Campos faltantes:</strong> {validationState.missingFields.length}</p>
+      </div>
+    </div>
+  );
+}
 
 export default DteFormContainer; 

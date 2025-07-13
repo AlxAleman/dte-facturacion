@@ -1,10 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LoginForm from "./components/auth/LoginForm";
 import DteTypeSelector from "./components/dte/DteTypeSelector";
-import DteForm from "./components/dte/DteForm";
-import DteHistory from "./components/dte/DteHistory";
-import DteContingency from "./components/dte/DteContingency";
-import DteInvalidation from "./components/dte/DteInvalidation";
+import DteFormContainer from "./components/dte/forms/DteFormContainer";
 import DTEManager from "./components/dte/DTEManager";  // ← Sistema profesional
 import DteTestSuite from "./components/dte/DteTestSuite";
 import DTESchemaAnalyzer from "./components/dte/DTESchemaAnalyzer";
@@ -73,49 +70,17 @@ export default function App() {
         <Route
           path="/emitir/:tipo"
           element={
-            isAuthenticated ? <DteForm /> : <Navigate to="/login" replace />
+            isAuthenticated ? <DteFormContainer /> : <Navigate to="/login" replace />
           }
         />
 
         {/* ================================ */}
-        {/* RUTAS DE GESTIÓN */}
+        {/* RUTAS DE GESTIÓN - EN DESARROLLO */}
         {/* ================================ */}
-        <Route
-          path="/historial"
-          element={
-            isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/dte/historial"
-          element={
-            isAuthenticated ? <DteHistory /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/contingencia"
-          element={
-            isAuthenticated ? <DteContingency /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/dte/contingencia"
-          element={
-            isAuthenticated ? <DteContingency /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/invalidacion"
-          element={
-            isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/dte/invalidacion"
-          element={
-            isAuthenticated ? <DteInvalidation /> : <Navigate to="/login" replace />
-          }
-        />
+        {/* 
+        Las rutas de historial, contingencia e invalidación están en desarrollo.
+        Se implementarán en futuras versiones del sistema.
+        */}
 
         {/* ================================ */}
         {/* ACCESOS DIRECTOS POR TIPO */}

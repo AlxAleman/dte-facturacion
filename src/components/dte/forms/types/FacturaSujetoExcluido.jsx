@@ -4,13 +4,16 @@
 import React from 'react';
 import { FileText, Ban } from 'lucide-react';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
-import { buscarActividadPorCodigo } from '../../data/catalogoActividadEconomica';
+import {
+  actividadesCat019 as actividadesEconomicas,
+  buscarPorCodigo as buscarActividadPorCodigo,
+  buscarPorValor as buscarActividadPorNombre
+} from '../../../data/catalogoActividadEconomica';
 import { 
   catalogoDepartamentos,
   catalogoMunicipios,
   buscarPorCodigo
-} from '../../data/catalogoGeneral';
-import EmisorInfo from '../shared/EmisorInfo';
+} from "../../../data/catalogoGeneral";
 import ReceptorForm from '../shared/ReceptorForm';
 import CuerpoDocumento from '../shared/CuerpoDocumento';
 
@@ -120,17 +123,17 @@ function getInitialData() {
 const FacturaSujetoExcluido = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const prevDataRef = React.useRef();
+
+  // Campos requeridos específicos para Factura de Sujeto Excluido
   const requiredFields = [
     'identificacion.tipoDte',
     'sujetoExcluido.nombre',
-    'sujetoExcluido.numDocumento',
-    'sujetoExcluido.direccion.departamento',
-    'sujetoExcluido.direccion.municipio',
-    'sujetoExcluido.direccion.complemento',
-    'cuerpoDocumento',
-    'extension.motivoExclusion'
+    'sujetoExcluido.nit',
+    'cuerpoDocumento'
   ];
-  
+
+  // Restaurar datos solo una vez al montar
   React.useEffect(() => {
     if (initialData && !isInitialized) {
       setFormData(initialData);
@@ -139,14 +142,30 @@ const FacturaSujetoExcluido = ({ onDataChange, initialData }) => {
       setIsInitialized(true);
     }
   }, [initialData, isInitialized]);
-  
+
+  // Notificar cambios al componente padre SOLO si los datos realmente cambian
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
-      onDataChange(formData);
+      const prev = prevDataRef.current;
+      const curr = formData;
+      // Comparación superficial, puedes mejorar con deepEqual si lo deseas
+      if (JSON.stringify(prev) !== JSON.stringify(curr)) {
+        prevDataRef.current = curr;
+        // Validación básica (puedes mejorar esto)
+        const isValid = requiredFields.every(f => !isFieldEmpty(getNestedValue(curr, f)));
+        const missingFields = requiredFields.filter(f => isFieldEmpty(getNestedValue(curr, f)));
+        const validation = { isValid, missingFields, errors: {} };
+        onDataChange(curr, validation);
+      }
     }
   }, [formData, onDataChange, isInitialized]);
   
-  const getNestedValue = (obj, path) => path.split('.').reduce((current, key) => current && current[key] !== undefined ? current[key] : undefined, obj);
+  const getNestedValue = (obj, path) => {
+    if (!path || typeof path !== 'string') {
+      return undefined;
+    }
+    return path.split('.').reduce((current, key) => current && current[key] !== undefined ? current[key] : undefined, obj);
+  };
   
   const isFieldEmpty = (fieldPath) => {
     const value = getNestedValue(formData, fieldPath);
@@ -195,8 +214,6 @@ const FacturaSujetoExcluido = ({ onDataChange, initialData }) => {
           </div>
         </div>
       </div>
-      
-      <EmisorInfo formData={formData} onDataChange={emisorData => setFormData(prev => ({ ...prev, emisor: emisorData }))} />
       
       {/* Formulario específico para Sujeto Excluido */}
       <div className="bg-white border border-gray-300 rounded-lg p-6">

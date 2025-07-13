@@ -4,13 +4,16 @@
 import React from 'react';
 import { FileText, CreditCard, AlertCircle } from 'lucide-react';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
-import { buscarActividadPorCodigo } from '../../data/catalogoActividadEconomica';
+import {
+  actividadesCat019 as actividadesEconomicas,
+  buscarPorCodigo as buscarActividadPorCodigo,
+  buscarPorValor as buscarActividadPorNombre
+} from '../../../data/catalogoActividadEconomica';
 import { 
   catalogoDepartamentos,
   catalogoMunicipios,
   buscarPorCodigo
-} from '../../data/catalogoGeneral';
-import EmisorInfo from '../shared/EmisorInfo';
+} from '../../../data/catalogoGeneral';
 import ReceptorForm from '../shared/ReceptorForm';
 import CuerpoDocumento from '../shared/CuerpoDocumento';
 
@@ -136,6 +139,7 @@ function getInitialData() {
 const NotaCredito = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const prevDataRef = React.useRef();
 
   // Campos requeridos específicos para Nota de Crédito
   const requiredFields = [
@@ -143,34 +147,41 @@ const NotaCredito = ({ onDataChange, initialData }) => {
     'receptor.nombre',
     'receptor.nit',
     'receptor.nrc',
-    'documentoRelacionado',
-    'extension.tipoNota',
-    'extension.motivo',
-    'extension.descripcion',
     'cuerpoDocumento'
   ];
 
   // Restaurar datos solo una vez al montar
   React.useEffect(() => {
     if (initialData && !isInitialized) {
-      console.log('📝 Restaurando datos del formulario (una sola vez):', initialData);
       setFormData(initialData);
       setIsInitialized(true);
     } else if (!initialData && !isInitialized) {
-      console.log('✅ Sin datos iniciales, habilitando formulario');
       setIsInitialized(true);
     }
   }, [initialData, isInitialized]);
 
-  // Notificar cambios al componente padre (solo después de inicializar)
+  // Notificar cambios al componente padre SOLO si los datos realmente cambian
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
-      onDataChange(formData);
+      const prev = prevDataRef.current;
+      const curr = formData;
+      // Comparación superficial, puedes mejorar con deepEqual si lo deseas
+      if (JSON.stringify(prev) !== JSON.stringify(curr)) {
+        prevDataRef.current = curr;
+        // Validación básica (puedes mejorar esto)
+        const isValid = requiredFields.every(f => !isFieldEmpty(getNestedValue(curr, f)));
+        const missingFields = requiredFields.filter(f => isFieldEmpty(getNestedValue(curr, f)));
+        const validation = { isValid, missingFields, errors: {} };
+        onDataChange(curr, validation);
+      }
     }
   }, [formData, onDataChange, isInitialized]);
 
   // Obtener valor anidado del objeto
   const getNestedValue = (obj, path) => {
+    if (!path || typeof path !== 'string') {
+      return undefined;
+    }
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
@@ -351,10 +362,10 @@ const NotaCredito = ({ onDataChange, initialData }) => {
       </div>
 
       {/* Información del Emisor */}
-      <EmisorInfo 
+      {/* Eliminar: <EmisorInfo 
         formData={formData} 
         onDataChange={(emisorData) => setFormData(prev => ({ ...prev, emisor: emisorData }))} 
-      />
+      /> */}
 
       {/* Información del Receptor */}
       <ReceptorForm 

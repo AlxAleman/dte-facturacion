@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CATALOGS } from '../../data/catalogs';
-import { actividadesEconomicas, buscarActividadPorCodigo, buscarActividadPorNombre } from '../../data/catalogoActividadEconomica';
+import { CATALOGS } from '../../../data/catalogs';
+import {
+  actividadesCat019 as actividadesEconomicas,
+  buscarPorCodigo as buscarActividadPorCodigo,
+  buscarPorValor as buscarActividadPorNombre
+} from '../../../data/catalogoActividadEconomica';
 import { 
   catalogoDepartamentos,
   catalogoMunicipios,
   buscarPorCodigo
-} from '../../data/catalogoGeneral';
+} from '../../../data/catalogoGeneral';
 
 const ReceptorForm = ({ 
   formData, 
@@ -102,44 +106,10 @@ const ReceptorForm = ({
     });
   };
 
-  // Completar automáticamente campos opcionales
-  const handleAutoComplete = () => {
-    const actividadDefault = buscarActividadPorCodigo("62010") || { codigo: "62010", valor: "Programación informática" };
-    const departamentoDefault = buscarPorCodigo(catalogoDepartamentos, "06") || { codigo: "06", valor: "San Salvador" };
-    const municipioDefault = buscarPorCodigo(catalogoMunicipios, "23") || { codigo: "23", valor: "SAN SALVADOR CENTRO" };
-    
-    const updatedReceptor = {
-      ...formData.receptor,
-      codActividad: formData.receptor.codActividad || actividadDefault.codigo,
-      descActividad: formData.receptor.descActividad || actividadDefault.valor,
-      nombreComercial: formData.receptor.nombreComercial || formData.receptor.nombre,
-      telefono: formData.receptor.telefono || "0000-0000",
-      correo: formData.receptor.correo || "cliente@ejemplo.com",
-      direccion: {
-        ...formData.receptor.direccion,
-        departamento: formData.receptor.direccion?.departamento || departamentoDefault.codigo,
-        municipio: formData.receptor.direccion?.municipio || municipioDefault.codigo,
-        complemento: formData.receptor.direccion?.complemento || "Dirección por defecto"
-      }
-    };
-
-    onDataChange({
-      ...formData,
-      receptor: updatedReceptor
-    });
-  };
-
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium text-gray-900">Información del Receptor</h3>
-        <button
-          type="button"
-          onClick={handleAutoComplete}
-          className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-md hover:bg-blue-200 transition-colors"
-        >
-          🤖 Completar automáticamente
-        </button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -170,7 +140,7 @@ const ReceptorForm = ({
             className={getFieldClassName ? getFieldClassName('receptor.tipoDocumento') : "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
             required={requiredFields.includes('receptor.tipoDocumento')}
           >
-            {CATALOGS.TIPOS_DOCUMENTO.map(tipo => (
+            {CATALOGS.TIPOS_DOCUMENTO_IDENTIFICACION.map(tipo => (
               <option key={tipo.codigo} value={tipo.codigo}>
                 {tipo.codigo} - {tipo.valor}
               </option>

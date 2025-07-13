@@ -5,11 +5,14 @@ G:\PROJECTS\dte-facturacion
 ├── .vercel
 │   ├── project.json
 │   └── README.txt
+├── dist
+│   ├── assets
+│   │   ├── index-BXPll51L.css
+│   │   └── index-Bxr92A1p.js
+│   ├── index.html
+│   ├── logo.png
+│   └── vite.svg
 ├── public
-│   ├── certificates
-│   │   ├── firma-digital.pfx
-│   │   ├── test-cert.cer
-│   │   └── test-key.key
 │   ├── logo.png
 │   └── vite.svg
 ├── src
@@ -20,7 +23,6 @@ G:\PROJECTS\dte-facturacion
 │   │   └── TaxCalculator.jsx
 │   ├── components
 │   │   ├── api
-│   │   │   └── fakeApi.js
 │   │   ├── auth
 │   │   │   ├── AuthContext.jsx
 │   │   │   └── LoginForm.jsx
@@ -29,7 +31,6 @@ G:\PROJECTS\dte-facturacion
 │   │   ├── context
 │   │   │   └── AuthContext.jsx
 │   │   ├── data
-│   │   │   ├── actividadesEconomicas
 │   │   │   ├── catalogoActividadEconomica.js
 │   │   │   ├── catalogoGeneral.js
 │   │   │   ├── catalogoPaises.js
@@ -38,12 +39,8 @@ G:\PROJECTS\dte-facturacion
 │   │   │   ├── forms
 │   │   │   │   ├── shared
 │   │   │   │   │   ├── CuerpoDocumento.jsx
-│   │   │   │   │   ├── DocumentInfoSection.jsx
-│   │   │   │   │   ├── EmisorInfo.jsx
-│   │   │   │   │   ├── EmisorSection.jsx
-│   │   │   │   │   ├── ProductItemsSection.jsx
 │   │   │   │   │   ├── ReceptorForm.jsx
-│   │   │   │   │   └── ValidationSummary.jsx
+│   │   │   │   │   └── utils.js
 │   │   │   │   ├── types
 │   │   │   │   │   ├── ComprobanteCreditoFiscal.jsx
 │   │   │   │   │   ├── ComprobanteDonacion.jsx
@@ -57,16 +54,9 @@ G:\PROJECTS\dte-facturacion
 │   │   │   │   │   ├── NotaCredito.jsx
 │   │   │   │   │   ├── NotaDebito.jsx
 │   │   │   │   │   └── NotaRemision.jsx
-│   │   │   │   ├── DteFormContainer.export.js
 │   │   │   │   ├── DteFormContainer.jsx
-│   │   │   │   ├── index.js
-│   │   │   │   ├── README.md
-│   │   │   │   └── TestDteFormContainer.jsx
-│   │   │   ├── DteContingency.jsx
+│   │   │   │   └── README.md
 │   │   │   ├── DteFinalReview.jsx
-│   │   │   ├── DteForm.jsx
-│   │   │   ├── DteHistory.jsx
-│   │   │   ├── DteInvalidation.jsx
 │   │   │   ├── DTEManager.jsx
 │   │   │   ├── DTESchemaAnalyzer.jsx
 │   │   │   ├── DteTestSuite.jsx
@@ -79,14 +69,9 @@ G:\PROJECTS\dte-facturacion
 │   │   │   ├── useSchemaValidation.js
 │   │   │   └── useTaxCalculations.js
 │   │   ├── layout
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── ProtectedRoute.jsx
-│   │   │   └── Sidebar.jsx
 │   │   ├── schemas
 │   │   │   ├── anulacion-schema-v2.json
 │   │   │   ├── contingencia-schema-v3.json
-│   │   │   ├── creditoFiscal.schema.json
-│   │   │   ├── facturaElectronica.schema.json
 │   │   │   ├── fe-ccf-v3.json
 │   │   │   ├── fe-cd-v1.json
 │   │   │   ├── fe-cl-v1.json
@@ -99,31 +84,26 @@ G:\PROJECTS\dte-facturacion
 │   │   │   ├── fe-nd-v3.json
 │   │   │   ├── fe-nr-v3.json
 │   │   │   └── schemas.js
-│   │   ├── services
-│   │   │   ├── apiService.js
-│   │   │   ├── digitalSignature.js
-│   │   │   ├── SchemaValidationDocs.jsx
-│   │   │   └── SchemaValidationIndicator.jsx
-│   │   └── vercel.json
+│   │   └── services
+│   │       ├── apiService.js
+│   │       ├── digitalSignature.js
+│   │       ├── SchemaValidationDocs.jsx
+│   │       └── SchemaValidationIndicator.jsx
 │   ├── config
-│   │   ├── empresa.js
-│   │   └── index.js
+│   │   └── empresa.js
 │   ├── services
-│   │   ├── schemaValidator.cjs
 │   │   └── schemaValidator.js
 │   ├── utils
 │   │   ├── geoCatalogs.js
 │   │   ├── index.js
 │   │   └── numberToWords.js
-│   ├── App.css
 │   ├── App.jsx
 │   ├── fakeReceivers.js
 │   ├── index.css
-│   ├── main.jsx
-│   ├── test-json-completeness.js
-│   └── test-schema-validator.cjs
+│   └── main.jsx
 ├── .env
 ├── .gitignore
+├── archivos-eliminados.txt
 ├── COMANDOS-CERRAR-PUERTOS.md
 ├── CONFIGURACION_EMPRESA.md
 ├── eslint.config.js

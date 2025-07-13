@@ -8,7 +8,21 @@ const EmpresaConfig = ({ onConfigChange }) => {
   const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
-    setConfig(EMPRESA_CONFIG);
+    // Cargar configuración guardada en localStorage o usar la configuración por defecto
+    const savedConfig = localStorage.getItem('empresaConfig');
+    if (savedConfig) {
+      try {
+        const parsedConfig = JSON.parse(savedConfig);
+        setConfig(parsedConfig);
+        console.log('✅ Configuración cargada desde localStorage:', parsedConfig);
+      } catch (error) {
+        console.error('❌ Error al cargar configuración desde localStorage:', error);
+        setConfig(EMPRESA_CONFIG);
+      }
+    } else {
+      setConfig(EMPRESA_CONFIG);
+      console.log('ℹ️ Usando configuración por defecto');
+    }
   }, []);
 
   const handleInputChange = (field, value) => {
@@ -68,7 +82,18 @@ const EmpresaConfig = ({ onConfigChange }) => {
   };
 
   const handleCancel = () => {
-    setConfig(EMPRESA_CONFIG);
+    // Recargar la configuración guardada en localStorage
+    const savedConfig = localStorage.getItem('empresaConfig');
+    if (savedConfig) {
+      try {
+        const parsedConfig = JSON.parse(savedConfig);
+        setConfig(parsedConfig);
+      } catch (error) {
+        setConfig(EMPRESA_CONFIG);
+      }
+    } else {
+      setConfig(EMPRESA_CONFIG);
+    }
     setValidationErrors({});
     setIsEditing(false);
   };
@@ -80,7 +105,17 @@ const EmpresaConfig = ({ onConfigChange }) => {
       : `${baseClass} border-gray-300`;
   };
 
-  const isConfigValid = validarConfiguracionEmpresa();
+  const isConfigValid = () => {
+    const camposRequeridos = ['nombre', 'nit'];
+    const camposFaltantes = camposRequeridos.filter(campo => !config[campo]);
+    
+    if (camposFaltantes.length > 0) {
+      console.warn('⚠️ Campos de empresa faltantes:', camposFaltantes);
+      return false;
+    }
+    
+    return true;
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -121,19 +156,19 @@ const EmpresaConfig = ({ onConfigChange }) => {
       </div>
 
       {/* Estado de la configuración */}
-      <div className={`mb-6 p-4 rounded-md ${isConfigValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+      <div className={`mb-6 p-4 rounded-md ${isConfigValid() ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
         <div className="flex items-center">
-          {isConfigValid ? (
+          {isConfigValid() ? (
             <Check className="w-5 h-5 text-green-600 mr-2" />
           ) : (
             <X className="w-5 h-5 text-red-600 mr-2" />
           )}
-          <span className={`text-sm font-medium ${isConfigValid ? 'text-green-800' : 'text-red-800'}`}>
-            {isConfigValid ? 'Configuración válida' : 'Configuración incompleta'}
+          <span className={`text-sm font-medium ${isConfigValid() ? 'text-green-800' : 'text-red-800'}`}>
+            {isConfigValid() ? 'Configuración válida' : 'Configuración incompleta'}
           </span>
         </div>
-        <p className={`text-sm mt-1 ${isConfigValid ? 'text-green-700' : 'text-red-700'}`}>
-          {isConfigValid 
+        <p className={`text-sm mt-1 ${isConfigValid() ? 'text-green-700' : 'text-red-700'}`}>
+          {isConfigValid() 
             ? 'Todos los campos requeridos están configurados correctamente.'
             : 'Faltan campos requeridos. Complete la configuración para continuar.'
           }

@@ -2,27 +2,23 @@
 // Formulario específico para Factura de Consumidor (Tipo 01)
 
 import React from 'react';
-import { FileText } from 'lucide-react';
-import { CATALOGS } from '../../data/catalogs';
+import { FileText, Receipt } from 'lucide-react';
+import { CATALOGS } from '../../../data/catalogs';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
-import { buscarActividadPorCodigo } from '../../data/catalogoActividadEconomica';
-import { 
+import {
+  actividadesCat019 as actividadesEconomicas,
+  buscarPorCodigo as buscarActividadPorCodigo,
+  buscarPorValor as buscarActividadPorNombre
+} from '../../../data/catalogoActividadEconomica';
+import {
   catalogoDepartamentos,
   catalogoMunicipios,
   buscarPorCodigo
-} from '../../data/catalogoGeneral';
-import EmisorInfo from '../shared/EmisorInfo';
+} from '../../../data/catalogoGeneral';
 import ReceptorForm from '../shared/ReceptorForm';
 import CuerpoDocumento from '../shared/CuerpoDocumento';
 
-// Función helper para generar UUID
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16).toUpperCase();
-  });
-}
+import { generateUUID, getNestedValue, isFieldEmpty, getFieldClassName, getFieldDisplayName } from '../shared/utils';
 
 // Función para obtener datos iniciales específicos para Factura de Consumidor
 function getInitialData() {
@@ -33,7 +29,7 @@ function getInitialData() {
 
   // Obtener datos del emisor desde la configuración
   const emisorData = getEmisorData();
-  
+
   console.log('🏢 Datos del emisor obtenidos:', emisorData);
 
   // Obtener códigos de catálogos oficiales
@@ -117,19 +113,20 @@ function getInitialData() {
       numPagoElectronico: ""
     }
   };
-  
+
   console.log('📋 Datos iniciales generados para FacturaConsumidor:', {
     emisor: initialData.emisor,
     receptor: initialData.receptor,
     cuerpoDocumento: initialData.cuerpoDocumento
   });
-  
+
   return initialData;
 }
 
 const FacturaConsumidor = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const prevDataRef = React.useRef();
 
   // Campos requeridos específicos para Factura de Consumidor
   const requiredFields = [
@@ -143,59 +140,39 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
   // Restaurar datos solo una vez al montar
   React.useEffect(() => {
     if (initialData && !isInitialized) {
-      console.log('📝 Restaurando datos del formulario (una sola vez):', initialData);
       setFormData(initialData);
       setIsInitialized(true);
     } else if (!initialData && !isInitialized) {
-      console.log('✅ Sin datos iniciales, habilitando formulario');
       setIsInitialized(true);
     }
   }, [initialData, isInitialized]);
 
-  // Notificar cambios al componente padre (solo después de inicializar)
+  // Notificar cambios al componente padre SOLO si los datos realmente cambian
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
-      console.log('📤 Notificando cambios desde FacturaConsumidor:', {
-        emisor: formData.emisor,
-        receptor: formData.receptor,
-        itemsCount: formData.cuerpoDocumento?.length || 0,
-        isInitialized
-      });
-      onDataChange(formData);
+      const prev = prevDataRef.current;
+      const curr = formData;
+      // Comparación superficial, puedes mejorar con deepEqual si lo deseas
+      if (JSON.stringify(prev) !== JSON.stringify(curr)) {
+        prevDataRef.current = curr;
+        // Validación básica (puedes mejorar esto)
+        const isValid = requiredFields.every(f => !isFieldEmpty(getNestedValue(curr, f)));
+        const missingFields = requiredFields.filter(f => isFieldEmpty(getNestedValue(curr, f)));
+        const validation = { isValid, missingFields, errors: {} };
+        onDataChange(curr, validation);
+      }
     }
   }, [formData, onDataChange, isInitialized]);
 
-  // Obtener valor anidado del objeto
-  const getNestedValue = (obj, path) => {
-    return path.split('.').reduce((current, key) => {
-      return current && current[key] !== undefined ? current[key] : undefined;
-    }, obj);
-  };
-
   // Verificar si un campo específico está vacío
-  const isFieldEmpty = (fieldPath) => {
+  const isFieldEmptyLocal = (fieldPath) => {
     const value = getNestedValue(formData, fieldPath);
-    return value === undefined || value === null || value === '' || 
-           (Array.isArray(value) && value.length === 0) ||
-           (typeof value === 'object' && Object.keys(value).length === 0);
+    return isFieldEmpty(value);
   };
 
   // Obtener clase CSS para campos con error
-  const getFieldClassName = (fieldPath, baseClass = "") => {
-    const hasError = isFieldEmpty(fieldPath);
-    const isRequired = requiredFields.includes(fieldPath);
-    
-    let className = baseClass || "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
-    
-    if (hasError) {
-      className += " border-red-300 focus:border-red-500 focus:ring-red-500";
-    } else if (isRequired) {
-      className += " border-blue-300";
-    } else {
-      className += " border-gray-300";
-    }
-    
-    return className;
+  const getFieldClassNameLocal = (fieldPath, baseClass = "") => {
+    return getFieldClassName(fieldPath, formData, requiredFields, baseClass);
   };
 
   // Manejar cambios en campos de identificación
@@ -220,14 +197,26 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }));
   };
 
+  // Render seguro con valores por defecto
   return (
     <div className="space-y-8">
+      {/* Banner informativo para Factura de Consumidor */}
+      <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <Receipt className="h-8 w-8 text-green-600" />
+          <div>
+            <h2 className="text-xl font-bold text-green-900">🧾 Factura de Consumidor (Tipo 01)</h2>
+            <p className="text-green-700">Documento para ventas a consumidores finales</p>
+          </div>
+        </div>
+      </div>
+
       {/* Información del Emisor */}
-      <EmisorInfo formData={formData} />
+      {/* Eliminar: <EmisorInfo formData={formData || {}} /> */}
 
       {/* Información del Receptor */}
       <ReceptorForm
-        formData={formData}
+        formData={formData || {}}
         onDataChange={setFormData}
         requiredFields={requiredFields}
         isFieldEmpty={isFieldEmpty}
@@ -241,7 +230,7 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
 
       {/* Cuerpo del Documento */}
       <CuerpoDocumento
-        formData={formData}
+        formData={formData || {}}
         onDataChange={setFormData}
         requiredFields={requiredFields}
         isFieldEmpty={isFieldEmpty}
@@ -264,7 +253,7 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
               Condición de Operación
             </label>
             <select
-              value={formData.resumen.condicionOperacion}
+              value={formData?.resumen?.condicionOperacion ?? 1}
               onChange={(e) => handleResumenChange('condicionOperacion', parseInt(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -273,13 +262,13 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
               <option value={3}>3 - Otro</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tipo de Moneda
             </label>
             <select
-              value={formData.identificacion.tipoMoneda}
+              value={formData?.identificacion?.tipoMoneda ?? 'USD'}
               onChange={(e) => handleIdentificacionChange('tipoMoneda', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -292,19 +281,7 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
       </div>
 
       {/* Información específica de Factura de Consumidor */}
-      <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
-          <FileText className="w-4 h-4" />
-          Información de Factura de Consumidor
-        </h4>
-        <div className="text-sm text-blue-800 space-y-1">
-          <p>• <strong>Factura de Consumidor:</strong> Para ventas a consumidores finales</p>
-          <p>• <strong>IVA:</strong> 13% sobre operaciones gravadas</p>
-          <p>• <strong>Retención:</strong> 1% - 10% según aplique</p>
-          <p>• <strong>Receptor:</strong> Puede ser persona natural o jurídica</p>
-          <p>• <strong>NRC:</strong> Requerido solo para NIT, no aplica para DUI</p>
-        </div>
-      </div>
+      {/* Eliminar el bloque de información específica de Factura de Consumidor */}
     </div>
   );
 };

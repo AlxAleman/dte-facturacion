@@ -27,14 +27,12 @@ Este sistema modular reemplaza el archivo monolítico `DteForm.jsx` (3,762 líne
 ```
 src/components/dte/forms/
 ├── DteFormContainer.jsx          # Coordinador principal
-├── DteFormContainer.export.js    # Exportación para evitar imports circulares
-├── TestDteFormContainer.jsx      # Componente de prueba
-├── index.js                      # Exportaciones principales
 ├── README.md                     # Esta documentación
 ├── shared/                       # Componentes compartidos
 │   ├── EmisorInfo.jsx           # Información del emisor (solo lectura)
 │   ├── ReceptorForm.jsx         # Formulario del receptor
-│   └── CuerpoDocumento.jsx      # Gestión de productos/servicios
+│   ├── CuerpoDocumento.jsx      # Gestión de productos/servicios
+│   └── utils.js                 # Utilidades compartidas
 └── types/                        # Formularios específicos por tipo
     ├── index.js                  # Exportaciones de tipos
     ├── FacturaConsumidor.jsx     # Tipo 01
@@ -71,7 +69,7 @@ src/components/dte/forms/
 ### Uso Básico
 
 ```jsx
-import DteFormContainer from './components/dte/forms/DteFormContainer.export';
+import DteFormContainer from './components/dte/forms/DteFormContainer';
 
 function App() {
   const handleDataChange = (data, validation) => {
@@ -116,10 +114,9 @@ const initialData = {
 ### Componente de Prueba
 
 ```jsx
-import TestDteFormContainer from './components/dte/forms/TestDteFormContainer';
-
-// Usar en desarrollo para probar todos los tipos
-<TestDteFormContainer />
+// El componente de prueba fue eliminado para simplificar la estructura
+// Puedes usar directamente DteFormContainer con diferentes tipos de DTE
+<DteFormContainer tipoDte="01" />
 ```
 
 ## 🔧 Componentes Compartidos
