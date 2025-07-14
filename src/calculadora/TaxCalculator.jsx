@@ -3,7 +3,9 @@ import { Calculator, AlertCircle, CheckCircle, Info, DollarSign, Percent } from 
 import { useTaxCalculations } from '../components/hooks/useTaxCalculations';
 
 const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
-  const [descuentoGlobal, setDescuentoGlobal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0);
+  const [descuentos, setDescuentos] = useState(0);
+  const [descuentoGlobal, setDescuentoGlobal] = useState(0); // Puedes eliminar si solo usarás 'descuentos'
   const [aplicarRetencion, setAplicarRetencion] = useState(false);
   const [calculations, setCalculations] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -63,11 +65,18 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   const performCalculation = useCallback(() => {
     setIsCalculating(true);
     try {
+      // Usar subtotal y descuentos del formulario si existen, si no calcular de items
+      const subtotalValue = subtotal > 0 ? subtotal : items.reduce((sum, item) => sum + (item.cantidad * item.precioUni), 0);
+      const descuentosValue = descuentos > 0 ? descuentos : 0;
       const results = calculate(items, {
-        descuentoGlobal,
+        subtotal: subtotalValue,
+        descuentos: descuentosValue,
         aplicarRetencion,
         tipoDte
       });
+      // Sobrescribir en el resultado para asegurar que se refleje lo ingresado
+      results.subtotal = subtotalValue;
+      results.descuentos = descuentosValue;
       setCalculations(results);
       if (onCalculationChange) {
         onCalculationChange(results);
@@ -78,7 +87,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     } finally {
       setIsCalculating(false);
     }
-  }, [items, descuentoGlobal, aplicarRetencion, tipoDte, calculate, onCalculationChange]);
+  }, [items, subtotal, descuentos, aplicarRetencion, tipoDte, calculate, onCalculationChange]);
 
   const handleDescuentoChange = (value) => {
     const descuento = Math.max(0, parseFloat(value) || 0);

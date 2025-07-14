@@ -14,6 +14,7 @@ const FacturaPreview = React.forwardRef(
       condicionOperacion = "Contado",
       pagina = 1,
       paginasTotales = 1,
+      qrValue: qrValueProp,
     },
     ref
   ) => {
@@ -25,9 +26,18 @@ const FacturaPreview = React.forwardRef(
       itemsVacio: Array.isArray(items) && items.length === 0
     };
     
+    // Debug: mostrar qué está llegando
+    console.log('🔍 FacturaPreview - Datos recibidos:', {
+      emisor: emisor,
+      receptor: receptor,
+      items: items,
+      validationChecks: validationChecks
+    });
+    
     const datosIncompletos = validationChecks.emisorNombre || validationChecks.receptorNombre || validationChecks.itemsArray || validationChecks.itemsVacio;
     
     if (datosIncompletos) {
+      console.log('❌ FacturaPreview - Datos incompletos detectados:', validationChecks);
       return (
         <div
           ref={ref}
@@ -55,15 +65,30 @@ const FacturaPreview = React.forwardRef(
               {validationChecks.itemsArray && <p style={{ margin: "4px 0" }}>❌ Los productos no están en formato correcto</p>}
               {validationChecks.itemsVacio && <p style={{ margin: "4px 0" }}>❌ No hay productos agregados</p>}
             </div>
+            <div style={{ fontSize: "10px", marginTop: "20px", textAlign: "left" }}>
+              <p><strong>Debug info:</strong></p>
+              <p>Emisor: {JSON.stringify(emisor)}</p>
+              <p>Receptor: {JSON.stringify(receptor)}</p>
+              <p>Items: {JSON.stringify(items)}</p>
+            </div>
           </div>
         </div>
       );
     }
 
+    console.log('✅ FacturaPreview - Datos válidos, mostrando preview');
+
     // QR
-    const qrValue = resumen?.codigoGeneracion
-      ? `https://portaldte.mh.gob.sv/consulta?codGen=${resumen.codigoGeneracion}&fecha=${resumen.fechaEmision || ""}`
-      : "https://portaldte.mh.gob.sv/";
+    const qrValue = qrValueProp || (resumen?.codigoGeneracion && resumen?.fechaEmision
+      ? `https://admin.factura.gob.sv/consultaPublica?ambiente=00&codGen=${resumen.codigoGeneracion}&fechaEmi=${resumen.fechaEmision}`
+      : "https://admin.factura.gob.sv/consultaPublica");
+
+    console.log('🔍 FacturaPreview - QR usado:', {
+      qrValueProp,
+      qrValue,
+      resumenCodigo: resumen?.codigoGeneracion,
+      resumenFecha: resumen?.fechaEmision
+    });
 
     // Cálculos automáticos de totales
     const sumaVentas = items.reduce((sum, item) => {

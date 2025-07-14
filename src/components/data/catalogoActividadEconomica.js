@@ -3,6 +3,12 @@
 // Total de actividades: 773
 
 export const actividadesCat019 = [
+  { codigo: "1", valor: "Cirugia" },
+  { codigo: "2", valor: "Operacion" },
+  { codigo: "3", valor: "Tratamiento medico" },
+  { codigo: "4", valor: "Cirugia instituto salvadoreno de Bienestar Magisterial" },
+  { codigo: "5", valor: "Operaci6n lnstituto Salvadoreno de Bienestar Magisterial" },
+  { codigo: "6", valor: "Tratamiento medico lnstituto Salvadoreno de Bienestar Magisterial" },
   { codigo: "01111", valor: "Cultivo de cereales excepto arroz y para forrajes" },
   { codigo: "01112", valor: "Cultivo de legumbres" },
   { codigo: "01113", valor: "Cultivo de semillas oleaginosas" },

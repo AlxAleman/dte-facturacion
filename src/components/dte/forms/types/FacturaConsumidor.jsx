@@ -2,7 +2,7 @@
 // Formulario específico para Factura de Consumidor (Tipo 01)
 
 import React from 'react';
-import { FileText, Receipt } from 'lucide-react';
+import { Receipt, User, ShoppingCart } from 'lucide-react';
 import { CATALOGS } from '../../../data/catalogs';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
 import {
@@ -17,35 +17,48 @@ import {
 } from '../../../data/catalogoGeneral';
 import ReceptorForm from '../shared/ReceptorForm';
 import CuerpoDocumento from '../shared/CuerpoDocumento';
-
 import { generateUUID, getNestedValue, isFieldEmpty, getFieldClassName, getFieldDisplayName } from '../shared/utils';
 
-// Función para obtener datos iniciales específicos para Factura de Consumidor
+// ===== CONFIGURACIÓN Y CONSTANTES =====
+const REQUIRED_FIELDS = [
+  'identificacion.tipoDte',
+  'receptor.nombre',
+  'receptor.tipoDocumento',
+  'receptor.numDocumento',
+  'cuerpoDocumento'
+];
+
+// ===== FUNCIÓN DE INICIALIZACIÓN =====
 function getInitialData() {
-  // Validar configuración de empresa
   if (!validarConfiguracionEmpresa()) {
     console.error('❌ Configuración de empresa incompleta. Revise src/config/empresa.js');
   }
 
-  // Obtener datos del emisor desde la configuración
   const emisorData = getEmisorData();
-
   console.log('🏢 Datos del emisor obtenidos:', emisorData);
 
-  // Obtener códigos de catálogos oficiales
-  const actividadEconomicaDefault = buscarActividadPorCodigo("62010") || { codigo: "62010", valor: "Programación informática" };
-  const departamentoDefault = buscarPorCodigo(catalogoDepartamentos, "06") || { codigo: "06", valor: "San Salvador" };
-  const municipioDefault = buscarPorCodigo(catalogoMunicipios, "23") || { codigo: "23", valor: "SAN SALVADOR CENTRO" };
+  const actividadEconomicaDefault = buscarActividadPorCodigo("62010") || { 
+    codigo: "62010", 
+    valor: "Programación informática" 
+  };
+  const departamentoDefault = buscarPorCodigo(catalogoDepartamentos, "06") || { 
+    codigo: "06", 
+    valor: "San Salvador" 
+  };
+  const municipioDefault = buscarPorCodigo(catalogoMunicipios, "23") || { 
+    codigo: "23", 
+    valor: "SAN SALVADOR CENTRO" 
+  };
 
-  return {
+  const initialData = {
     identificacion: {
       version: 1,
-      ambiente: "00", // 00=Prueba, 01=Producción
-      tipoDte: "01", // 01=Factura de Consumidor
+      ambiente: "00",
+      tipoDte: "01",
       codigoGeneracion: generateUUID(),
       numeroControl: "DTE-01-00000001-000000000000001",
-      tipoModelo: 1, // 1=Modelo previo, 2=Modelo diferido
-      tipoOperacion: 1, // 1=Normal, 2=Contingencia
+      tipoModelo: 1,
+      tipoOperacion: 1,
       fecEmi: new Date().toISOString().split('T')[0],
       horEmi: new Date().toTimeString().split(' ')[0],
       tipoMoneda: "USD"
@@ -64,7 +77,7 @@ function getInitialData() {
       }
     },
     receptor: {
-      tipoDocumento: "36", // 36=NIT, 13=DUI, 37=Otro, 03=Pasaporte, 02=Carnet de Residente
+      tipoDocumento: "13", // Cambio a DUI por defecto para ser consistente
       numDocumento: "",
       nrc: null,
       nombre: "",
@@ -108,7 +121,7 @@ function getInitialData() {
       totalLetras: "",
       totalIva: 0,
       saldoFavor: 0,
-      condicionOperacion: 1, // 1=Contado, 2=Crédito, 3=Otro
+      condicionOperacion: 1,
       pagos: [],
       numPagoElectronico: ""
     }
@@ -123,21 +136,14 @@ function getInitialData() {
   return initialData;
 }
 
+// ===== COMPONENTE PRINCIPAL =====
 const FacturaConsumidor = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const [municipiosFiltrados, setMunicipiosFiltrados] = React.useState([]);
   const prevDataRef = React.useRef();
 
-  // Campos requeridos específicos para Factura de Consumidor
-  const requiredFields = [
-    'identificacion.tipoDte',
-    'receptor.nombre',
-    'receptor.tipoDocumento',
-    'receptor.numDocumento',
-    'cuerpoDocumento'
-  ];
-
-  // Restaurar datos solo una vez al montar
+  // ===== EFECTOS =====
   React.useEffect(() => {
     if (initialData && !isInitialized) {
       setFormData(initialData);
@@ -147,35 +153,44 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }
   }, [initialData, isInitialized]);
 
-  // Notificar cambios al componente padre SOLO si los datos realmente cambian
+  // Filtrar municipios cuando cambie el departamento
+  React.useEffect(() => {
+    const departamentoSeleccionado = formData?.receptor?.direccion?.departamento;
+    if (departamentoSeleccionado) {
+      const municipios = catalogoMunicipios.filter(
+        municipio => municipio.departamento === departamentoSeleccionado
+      );
+      setMunicipiosFiltrados(municipios);
+      console.log('🏘️ Municipios filtrados para departamento', departamentoSeleccionado, ':', municipios);
+    } else {
+      setMunicipiosFiltrados([]);
+    }
+  }, [formData?.receptor?.direccion?.departamento]);
+
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
       const prev = prevDataRef.current;
       const curr = formData;
-      // Comparación superficial, puedes mejorar con deepEqual si lo deseas
+      
       if (JSON.stringify(prev) !== JSON.stringify(curr)) {
         prevDataRef.current = curr;
-        // Validación básica (puedes mejorar esto)
-        const isValid = requiredFields.every(f => !isFieldEmpty(getNestedValue(curr, f)));
-        const missingFields = requiredFields.filter(f => isFieldEmpty(getNestedValue(curr, f)));
+        const isValid = REQUIRED_FIELDS.every(f => !isFieldEmpty(getNestedValue(curr, f)));
+        const missingFields = REQUIRED_FIELDS.filter(f => isFieldEmpty(getNestedValue(curr, f)));
         const validation = { isValid, missingFields, errors: {} };
+        // Log temporal para depuración
+        console.log('[VALIDACIÓN] isValid:', isValid, 'missingFields:', missingFields, 'valores:', {
+          tipoDte: getNestedValue(curr, 'identificacion.tipoDte'),
+          nombre: getNestedValue(curr, 'receptor.nombre'),
+          tipoDocumento: getNestedValue(curr, 'receptor.tipoDocumento'),
+          numDocumento: getNestedValue(curr, 'receptor.numDocumento'),
+          cuerpoDocumento: getNestedValue(curr, 'cuerpoDocumento')
+        });
         onDataChange(curr, validation);
       }
     }
   }, [formData, onDataChange, isInitialized]);
 
-  // Verificar si un campo específico está vacío
-  const isFieldEmptyLocal = (fieldPath) => {
-    const value = getNestedValue(formData, fieldPath);
-    return isFieldEmpty(value);
-  };
-
-  // Obtener clase CSS para campos con error
-  const getFieldClassNameLocal = (fieldPath, baseClass = "") => {
-    return getFieldClassName(fieldPath, formData, requiredFields, baseClass);
-  };
-
-  // Manejar cambios en campos de identificación
+  // ===== HANDLERS =====
   const handleIdentificacionChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -186,7 +201,6 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }));
   };
 
-  // Manejar cambios en campos del resumen
   const handleResumenChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -197,57 +211,105 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }));
   };
 
-  // Render seguro con valores por defecto
+  // Handler para cambios en el receptor (incluyendo municipios)
+  const handleReceptorChange = (updatedReceptor) => {
+    setFormData(prev => ({
+      ...prev,
+      receptor: { ...prev.receptor, ...updatedReceptor }
+    }));
+  };
+
+  // Handler específico para cambio de departamento
+  const handleDepartamentoChange = (departamentoCode) => {
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        receptor: {
+          ...prev.receptor,
+          direccion: {
+            ...prev.receptor.direccion,
+            departamento: departamentoCode,
+            municipio: "" // Limpiar municipio al cambiar departamento
+          }
+        }
+      };
+      return newData;
+    });
+  };
+
+  // Handler específico para cambio de municipio
+  const handleMunicipioChange = (municipioCode) => {
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        receptor: {
+          ...prev.receptor,
+          direccion: {
+            ...prev.receptor.direccion,
+            municipio: municipioCode
+          }
+        }
+      };
+      return newData;
+    });
+  };
+
+  // ===== RENDER =====
   return (
     <div className="space-y-8">
-      {/* Banner informativo para Factura de Consumidor */}
+      
+      {/* Header Simple */}
       <div className="bg-green-100 border border-green-300 rounded-lg p-4">
         <div className="flex items-center gap-3">
           <Receipt className="h-8 w-8 text-green-600" />
           <div>
-            <h2 className="text-xl font-bold text-green-900">🧾 Factura de Consumidor (Tipo 01)</h2>
+            <h2 className="text-xl font-bold text-green-900">Factura de Consumidor (Tipo 01)</h2>
             <p className="text-green-700">Documento para ventas a consumidores finales</p>
           </div>
         </div>
       </div>
 
-      {/* Información del Emisor */}
-      {/* Eliminar: <EmisorInfo formData={formData || {}} /> */}
-
       {/* Información del Receptor */}
-      <ReceptorForm
-        formData={formData || {}}
-        onDataChange={setFormData}
-        requiredFields={requiredFields}
-        isFieldEmpty={isFieldEmpty}
-        getFieldClassName={getFieldClassName}
-        tipoDte="01"
-        showNrc={true}
-        showActividad={true}
-        showDireccion={true}
-        showContacto={true}
-      />
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="h-5 w-5 text-gray-600" />
+          <h3 className="text-lg font-medium text-gray-900">Información del Cliente</h3>
+        </div>
+        <ReceptorForm
+          formData={formData.receptor}
+          onDataChange={handleReceptorChange}
+          // Puedes agregar aquí otros props como requiredFields, isFieldEmpty, getFieldClassName, etc. si son necesarios
+        />
+
+        {/* Sección de Dirección Manual - ELIMINADA POR DUPLICIDAD */}
+      </div>
 
       {/* Cuerpo del Documento */}
-      <CuerpoDocumento
-        formData={formData || {}}
-        onDataChange={setFormData}
-        requiredFields={requiredFields}
-        isFieldEmpty={isFieldEmpty}
-        getFieldClassName={getFieldClassName}
-        showCodigo={true}
-        showDescripcion={true}
-        showCantidad={true}
-        showPrecio={true}
-        showDescuento={true}
-        showSubtotal={true}
-        title="Productos/Servicios"
-      />
-
-      {/* Información adicional */}
       <div className="mb-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Información Adicional</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex items-center gap-2 mb-4">
+          <ShoppingCart className="h-5 w-5 text-gray-600" />
+          <h3 className="text-lg font-medium text-gray-900">Productos y Servicios</h3>
+        </div>
+        <CuerpoDocumento
+          formData={formData || {}}
+          onDataChange={setFormData}
+          requiredFields={REQUIRED_FIELDS}
+          isFieldEmpty={isFieldEmpty}
+          getFieldClassName={getFieldClassName}
+          showCodigo={true}
+          showDescripcion={true}
+          showCantidad={true}
+          showPrecio={true}
+          showDescuento={true}
+          showSubtotal={true}
+          title="Productos/Servicios"
+        />
+      </div>
+
+      {/* Información Adicional Simplificada */}
+      <div className="mb-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Configuración del Documento</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Condición de Operación
@@ -277,13 +339,23 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
               <option value="CRC">CRC - Colón Costarricense</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha de Emisión
+            </label>
+            <input
+              type="date"
+              value={formData?.identificacion?.fecEmi ?? ''}
+              onChange={(e) => handleIdentificacionChange('fecEmi', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Información específica de Factura de Consumidor */}
-      {/* Eliminar el bloque de información específica de Factura de Consumidor */}
     </div>
   );
 };
 
-export default FacturaConsumidor; 
+export default FacturaConsumidor;

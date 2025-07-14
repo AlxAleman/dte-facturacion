@@ -407,13 +407,30 @@ const DTEManager = () => {
     const tipoDte = getCurrentDteType();
     const dteInfo = getCurrentDteInfo();
 
-    // Merge de emisor: config + formulario
-    const emisorMerged = { ...getEmisorData(), ...(dteData.emisor || {}) };
+    // Merge de emisor: config + formulario, priorizando config si el valor en el formulario es vacío
+    const emisorBase = getEmisorData();
+    const emisorUser = dteData.emisor || {};
+    const emisorMerged = { ...emisorBase };
+    Object.keys(emisorBase).forEach(key => {
+      // Si el usuario ingresó un valor no vacío, úsalo; si no, usa el de la config
+      emisorMerged[key] = (emisorUser[key] !== undefined && emisorUser[key] !== null && emisorUser[key] !== "") ? emisorUser[key] : emisorBase[key];
+    });
+
+    // Merge de receptor: asegurar siempre campo 'nombre'
+    const receptorUser = dteData.receptor || {};
+    let nombreReceptor = receptorUser.nombre || receptorUser.razonSocial || receptorUser.nombreComercial || receptorUser.nombreReceptor || "RECEPTOR SIN NOMBRE";
+    const receptorMerged = { ...receptorUser, nombre: nombreReceptor };
+
+    // Asegurar que el array de productos no sea undefined
+    let items = dteData.cuerpoDocumento || dteData.items || [];
+    if (!Array.isArray(items)) items = [];
+    // Para pruebas: si está vacío, poner un producto de ejemplo
+    // if (items.length === 0) items = [{ descripcion: "Producto de prueba", cantidad: 1, precioUni: 1 }];
 
     const previewData = {
       emisor: emisorMerged,
-      receptor: dteData.receptor || {},
-      items: dteData.cuerpoDocumento || dteData.items || [],
+      receptor: receptorMerged,
+      items,
       resumen: {
         codigoGeneracion: dteData.identificacion?.codigoGeneracion || '',
         numeroControl: dteData.identificacion?.numeroControl || '',
@@ -435,6 +452,8 @@ const DTEManager = () => {
       qrData,
       environment
     };
+
+    console.log('🟢 Datos enviados a FacturaPreview:', previewData);
 
     console.log('📋 Datos para preview:', {
       emisor: previewData.emisor,
@@ -587,149 +606,28 @@ const DTEManager = () => {
         horEmi: formData.identificacion?.horEmi || new Date().toTimeString().split(' ')[0],
         tipoMoneda: formData.identificacion?.tipoMoneda || "USD"
       },
-      emisor: { ...getEmisorData(), ...(formData.emisor || {}) },
-      receptor: tipoDte === "03" ? {
-        // 🆕 Estructura específica para CCF (solo NIT)
-        nit: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || "",
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "05" ? {
-        // 🆕 NUEVO: Estructura específica para Nota de Crédito (solo NIT)
-        nit: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || "",
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "06" ? {
-        // 🆕 NUEVO: Estructura específica para Nota de Débito (solo NIT)
-        nit: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || "",
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "07" ? {
-        // 🆕 NUEVO: Estructura específica para Comprobante de Retención (tipo/número de documento)
-        tipoDocumento: formData.receptor?.tipoDocumento || "36",
-        numDocumento: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || null,
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "08" ? {
-        // 🆕 NUEVO: Estructura específica para Comprobante de Liquidación (solo NIT)
-        nit: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || "",
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "09" ? {
-        // 🆕 NUEVO: Estructura específica para Documento Contable de Liquidación (solo NIT)
-        nit: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || "",
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        tipoEstablecimiento: "01",
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || "",
-        codigoMH: "0001",
-        puntoVentaMH: "0001"
-      } : tipoDte === "11" ? {
-        // 🆕 NUEVO: Estructura específica para Factura de Exportación
-        nombre: formData.receptor?.nombre || "",
-        tipoDocumento: formData.receptor?.tipoDocumento || "36",
-        numDocumento: formData.receptor?.numDocumento || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        codPais: formData.receptor?.codPais || "9905", // Estados Unidos por defecto
-        nombrePais: formData.receptor?.nombrePais || "Estados Unidos",
-        complemento: formData.receptor?.complemento || "",
-        tipoPersona: formData.receptor?.tipoPersona || 1,
-        descActividad: formData.receptor?.descActividad || "Comercio Internacional",
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || ""
-      } : tipoDte === "14" ? {
-        // 🆕 NUEVO: Estructura específica para Factura de Sujeto Excluido
-        tipoDocumento: formData.sujetoExcluido?.tipoDocumento || "36",
-        numDocumento: formData.sujetoExcluido?.numDocumento || "",
-        nombre: formData.sujetoExcluido?.nombre || "",
-        codActividad: formData.sujetoExcluido?.codActividad || "",
-        descActividad: formData.sujetoExcluido?.descActividad || "",
-        direccion: {
-          departamento: formData.sujetoExcluido?.direccion?.departamento || "",
-          municipio: formData.sujetoExcluido?.direccion?.municipio || "",
-          complemento: formData.sujetoExcluido?.direccion?.complemento || ""
-        },
-        telefono: formData.sujetoExcluido?.telefono || "",
-        correo: formData.sujetoExcluido?.correo || ""
-      } : {
-        // Estructura para Factura de Consumidor
-        tipoDocumento: formData.receptor?.tipoDocumento || "36",
-        numDocumento: formData.receptor?.numDocumento || "",
-        nrc: formData.receptor?.nrc || null,
-        nombre: formData.receptor?.nombre || "",
-        codActividad: formData.receptor?.codActividad || "",
-        descActividad: formData.receptor?.descActividad || "",
-        nombreComercial: formData.receptor?.nombreComercial || null,
-        direccion: {
-          departamento: formData.receptor?.direccion?.departamento || "",
-          municipio: formData.receptor?.direccion?.municipio || "",
-          complemento: formData.receptor?.direccion?.complemento || ""
-        },
-        telefono: formData.receptor?.telefono || "",
-        correo: formData.receptor?.correo || "",
-        // 🆕 NUEVO: Campo específico para Nota de Remisión
-        ...(tipoDte === "04" && {
-          bienTitulo: formData.receptor?.bienTitulo || "01"
-        })
-      },
+      emisor: (() => {
+        const emisorBase = getEmisorData();
+        const emisorUser = formData.emisor || {};
+        const emisorMerged = { ...emisorBase };
+        Object.keys(emisorBase).forEach(key => {
+          emisorMerged[key] = (emisorUser[key] !== undefined && emisorUser[key] !== null && emisorUser[key] !== "") ? emisorUser[key] : emisorBase[key];
+        });
+        // Asegurar que siempre haya un campo 'nombre' válido
+        if (!emisorMerged.nombre || emisorMerged.nombre === "") {
+          emisorMerged.nombre = emisorBase.nombre || emisorUser.nombre || emisorBase.nombreComercial || emisorUser.nombreComercial || "EMISOR SIN NOMBRE";
+        }
+        return emisorMerged;
+      })(),
+      receptor: (() => {
+        const receptorUser = formData.receptor || {};
+        // Asegurar que siempre haya un campo 'nombre' válido
+        let nombre = receptorUser.nombre || receptorUser.razonSocial || receptorUser.nombreComercial || receptorUser.nombreReceptor || "RECEPTOR SIN NOMBRE";
+        return { ...receptorUser, nombre };
+      })(),
+      items: Array.isArray(formData.cuerpoDocumento) && formData.cuerpoDocumento.length > 0
+        ? formData.cuerpoDocumento
+        : (Array.isArray(formData.items) ? formData.items : []),
       cuerpoDocumento: tipoDte === "07" ? formData.cuerpoDocumento?.map(item => ({
         // 🆕 NUEVO: Estructura específica para Comprobante de Retención
         numItem: item.numItem || 1,
@@ -1220,7 +1118,8 @@ const DTEManager = () => {
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 overflow-x-auto">
                   <FacturaPreview
                     ref={previewRef}
-                    data={getPreviewData()}
+                    {...getPreviewData()}
+                    qrValue={qrData?.qrValue || undefined}
                     className="w-full min-w-[600px]"
                   />
                 </div>

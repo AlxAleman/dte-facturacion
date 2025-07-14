@@ -19,9 +19,8 @@ export function getNestedValue(obj, path) {
 
 // Función para verificar si un campo está vacío
 export function isFieldEmpty(value) {
-  return value === undefined || value === null || value === '' || 
-         (Array.isArray(value) && value.length === 0) ||
-         (typeof value === 'object' && Object.keys(value).length === 0);
+  return value === undefined || value === null || value === '' ||
+         (Array.isArray(value) && value.length === 0);
 }
 
 // Función para obtener clase CSS para campos con error

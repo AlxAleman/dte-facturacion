@@ -12,11 +12,16 @@ import {
   Download,
   Copy
 } from 'lucide-react';
+import QRCode from 'react-qr-code';
 
 function SignatureQRManager({ dteData, onDocumentSigned, onQRGenerated }) {
   const [certificatesLoaded, setCertificatesLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [signature, setSignature] = useState(null);
+  const [signature, setSignature] = useState({
+    algorithm: 'SHA256',
+    privateKey: '',
+    // otros campos si es necesario
+  });
   const [qrCode, setQrCode] = useState(null);
   const [documentSigned, setDocumentSigned] = useState(false);
   const [error, setError] = useState(null);
@@ -182,166 +187,35 @@ function SignatureQRManager({ dteData, onDocumentSigned, onQRGenerated }) {
           </div>
         </div>
 
-        {/* Controles de firma */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Panel de firma */}
-          <div className="space-y-4">
-            <h4 className="text-md font-medium text-gray-900 dark:text-white">Firma Digital</h4>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Algoritmo de Firma
-                </label>
-                <select
-                  value={signature.algorithm}
-                  onChange={(e) => setSignature(prev => ({ ...prev, algorithm: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="SHA256">SHA256</option>
-                  <option value="SHA512">SHA512</option>
-                  <option value="MD5">MD5</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Clave Privada (Base64)
-                </label>
-                <textarea
-                  value={signature.privateKey}
-                  onChange={(e) => setSignature(prev => ({ ...prev, privateKey: e.target.value }))}
-                  placeholder="Ingrese su clave privada en formato Base64..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-mono text-sm"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={signDocument}
-                  disabled={!certificatesLoaded || !dteData}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium flex items-center gap-2 mx-auto ${
-                    certificatesLoaded && dteData
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <Shield className="h-5 w-5" />
-                  Firmar Documento
-                </button>
-                
-                <button
-                  onClick={loadTestCertificates}
-                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-                >
-                  Cargar Clave de Prueba
-                </button>
-              </div>
-            </div>
-
-            {/* Estado de la firma */}
-            {/* The original code had signatureStatus and qrStatus, but they were not defined.
-                Assuming they are meant to be part of the new_code's state or props,
-                but the new_code doesn't define them.
-                For now, I'll remove them as they are not present in the new_code's state/props.
-                If they were meant to be added, the new_code would need to be updated. */}
-          </div>
-
-          {/* Panel de QR */}
-          <div className="space-y-4">
-            <h4 className="text-md font-medium text-gray-900 dark:text-white">Código QR</h4>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tamaño del QR
-                </label>
-                <select
-                  value={qrCode?.size || 256} // Use qrCode?.size if available, otherwise default to 256
-                  onChange={(e) => setQrCode(prev => ({ ...prev, size: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={128}>128x128 (Pequeño)</option>
-                  <option value={256}>256x256 (Mediano)</option>
-                  <option value={512}>512x512 (Grande)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nivel de Corrección
-                </label>
-                <select
-                  value={qrCode?.errorCorrectionLevel || 'M'} // Use qrCode?.errorCorrectionLevel if available, otherwise default to 'M'
-                  onChange={(e) => setQrCode(prev => ({ ...prev, errorCorrectionLevel: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="L">L - Bajo (7%)</option>
-                  <option value="M">M - Medio (15%)</option>
-                  <option value="Q">Q - Alto (25%)</option>
-                  <option value="H">H - Máximo (30%)</option>
-                </select>
-              </div>
-
-              <button
-                onClick={signDocument} // This button now calls signDocument directly
-                disabled={!certificatesLoaded || !dteData}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                {isProcessing ? ( // Use isProcessing from original state
-                  <>
-                    <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
-                    Firmando...
-                  </>
-                ) : (
-                  <>
-                    <QrCode className="w-4 h-4 inline mr-2" />
-                    Generar Código QR
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Estado del QR */}
-            {/* The original code had signatureStatus and qrStatus, but they were not defined.
-                Assuming they are meant to be part of the new_code's state or props,
-                but the new_code doesn't define them.
-                For now, I'll remove them as they are not present in the new_code's state/props.
-                If they were meant to be added, the new_code would need to be updated. */}
-          </div>
+        {/* Botón para firmar y generar QR */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={signDocument}
+            disabled={!certificatesLoaded || !dteData || isProcessing}
+            className={`flex-1 px-4 py-2 rounded-lg font-medium flex items-center gap-2 mx-auto ${
+              certificatesLoaded && dteData && !isProcessing
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {isProcessing ? (
+              <>
+                <RefreshCw className="w-5 h-5 inline mr-2 animate-spin" />
+                Firmando...
+              </>
+            ) : (
+              <>
+                <Shield className="w-5 h-5" />
+                Firmar Documento
+              </>
+            )}
+          </button>
         </div>
 
         {/* Resultados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Información de la firma */}
-          {qrCode && ( // Use qrCode for signedDocument
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-              <h4 className="font-semibold text-green-900 dark:text-green-200 mb-3 flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Información de la Firma Digital
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-green-800 dark:text-green-300">Algoritmo:</span>
-                  <p className="text-green-700 dark:text-green-200">{qrCode.algorithm}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-green-800 dark:text-green-300">Estado:</span>
-                  <p className="text-green-700 dark:text-green-200">{qrCode.status}</p>
-                </div>
-                <div className="sm:col-span-2">
-                  <span className="font-medium text-green-800 dark:text-green-300">Sello:</span>
-                  <p className="text-green-700 dark:text-green-200 font-mono text-xs break-all mt-1">
-                    {qrCode.signatureValue}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Código QR generado */}
-          {qrCode && ( // Use qrCode for qrData
+          {qrCode && qrCode.url && (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
               <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-3 flex items-center gap-2">
                 <QrCode className="h-5 w-5" />
@@ -349,12 +223,7 @@ function SignatureQRManager({ dteData, onDocumentSigned, onQRGenerated }) {
               </h4>
               <div className="flex flex-col items-center space-y-3">
                 <div className="bg-white p-2 rounded-lg">
-                  <img
-                    src={qrCode.url} // Use qrCode.url for the QR image source
-                    alt="Código QR del DTE"
-                    className="max-w-full h-auto"
-                    style={{ maxWidth: `${qrCode.size}px` }}
-                  />
+                  <QRCode value={qrCode.url} size={128} />
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full">
                   <button

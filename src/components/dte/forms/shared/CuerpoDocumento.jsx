@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Copy } from 'lucide-react';
 
 const CuerpoDocumento = ({ 
   formData, 
@@ -119,7 +119,7 @@ const CuerpoDocumento = ({
                   className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
                   title="Duplicar producto"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Copy className="w-4 h-4" />
                 </button>
                 {itemsToRender.length > 1 && (
                   <button
