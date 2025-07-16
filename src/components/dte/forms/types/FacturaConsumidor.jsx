@@ -1,8 +1,8 @@
 // src/components/dte/forms/types/FacturaConsumidor.jsx
-// Formulario específico para Factura de Consumidor (Tipo 01)
+// Formulario específico para Factura de Consumidor (Tipo 01) - VERSIÓN CORREGIDA COMPLETA
 
 import React from 'react';
-import { Receipt, User, ShoppingCart } from 'lucide-react';
+import { Receipt, User, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { CATALOGS } from '../../../data/catalogs';
 import { getEmisorData, validarConfiguracionEmpresa } from '../../../../config/empresa';
 import {
@@ -28,7 +28,7 @@ const REQUIRED_FIELDS = [
   'cuerpoDocumento'
 ];
 
-// ===== FUNCIÓN DE INICIALIZACIÓN =====
+// ===== FUNCIÓN DE INICIALIZACIÓN SIMPLIFICADA =====
 function getInitialData() {
   if (!validarConfiguracionEmpresa()) {
     console.error('❌ Configuración de empresa incompleta. Revise src/config/empresa.js');
@@ -59,6 +59,8 @@ function getInitialData() {
       numeroControl: "DTE-01-00000001-000000000000001",
       tipoModelo: 1,
       tipoOperacion: 1,
+      tipoContingencia: null,
+      motivoContin: null,
       fecEmi: new Date().toISOString().split('T')[0],
       horEmi: new Date().toTimeString().split(' ')[0],
       tipoMoneda: "USD"
@@ -70,6 +72,11 @@ function getInitialData() {
       codActividad: actividadEconomicaDefault.codigo,
       descActividad: actividadEconomicaDefault.valor,
       nombreComercial: emisorData.nombreComercial || null,
+      tipoEstablecimiento: emisorData.tipoEstablecimiento || "01",
+      codEstableMH: emisorData.codEstableMH || "0001",
+      codEstable: emisorData.codEstable || "0001",
+      codPuntoVentaMH: emisorData.codPuntoVentaMH || "0001",
+      codPuntoVenta: emisorData.codPuntoVenta || "0001",
       direccion: {
         departamento: departamentoDefault.codigo,
         municipio: municipioDefault.codigo,
@@ -77,9 +84,9 @@ function getInitialData() {
       }
     },
     receptor: {
-      tipoDocumento: "13", // Cambio a DUI por defecto para ser consistente
+      tipoDocumento: "36", // DUI por defecto
       numDocumento: "",
-      nrc: null,
+      nrc: null, // null para DUI según schema
       nombre: "",
       codActividad: actividadEconomicaDefault.codigo,
       descActividad: actividadEconomicaDefault.valor,
@@ -91,16 +98,23 @@ function getInitialData() {
       telefono: "",
       correo: ""
     },
+    
+    // 🔥 CUERPO SIMPLIFICADO - Solo campos de entrada para Paso 1
     cuerpoDocumento: [
       {
         numItem: 1,
+        tipoItem: 2, // Campo técnico oculto
         codigo: "",
         descripcion: "",
+        uniMedida: "59", // Campo técnico oculto
         cantidad: 1,
         precioUni: 0,
         montoDescu: 0
+        // Los demás campos se agregan en el Paso 2 (cálculos)
       }
     ],
+    
+    // 🔥 RESUMEN SIMPLIFICADO - Estructura básica
     resumen: {
       totalNoSuj: 0,
       totalExenta: 0,
@@ -122,9 +136,19 @@ function getInitialData() {
       totalIva: 0,
       saldoFavor: 0,
       condicionOperacion: 1,
-      pagos: [],
+      pagos: [{
+        codigo: "01",
+        montoPago: 0
+      }],
       numPagoElectronico: ""
-    }
+    },
+
+    // Campos opcionales
+    documentoRelacionado: null,
+    otrosDocumentos: null,
+    ventaTercero: null,
+    extension: null,
+    apendice: null
   };
 
   console.log('📋 Datos iniciales generados para FacturaConsumidor:', {
@@ -136,11 +160,47 @@ function getInitialData() {
   return initialData;
 }
 
+// 🔥 VALIDACIÓN SIMPLIFICADA - Solo para Paso 1
+const validateForStep1 = (formData) => {
+  const errors = [];
+  
+  // Validar campos básicos requeridos
+  if (!formData.receptor?.nombre) {
+    errors.push('Nombre del receptor es requerido');
+  }
+  if (!formData.receptor?.numDocumento) {
+    errors.push('Número de documento es requerido');
+  }
+  if (!formData.cuerpoDocumento || formData.cuerpoDocumento.length === 0) {
+    errors.push('Debe agregar al menos un producto');
+  } else {
+    // Validar que cada producto tenga los campos básicos
+    formData.cuerpoDocumento.forEach((item, index) => {
+      if (!item.descripcion) {
+        errors.push(`Producto ${index + 1}: Descripción es requerida`);
+      }
+      if (!item.cantidad || item.cantidad <= 0) {
+        errors.push(`Producto ${index + 1}: Cantidad debe ser mayor a 0`);
+      }
+      if (!item.precioUni || item.precioUni <= 0) {
+        errors.push(`Producto ${index + 1}: Precio debe ser mayor a 0`);
+      }
+    });
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    missingFields: errors,
+    errors: {}
+  };
+};
+
 // ===== COMPONENTE PRINCIPAL =====
 const FacturaConsumidor = ({ onDataChange, initialData }) => {
   const [formData, setFormData] = React.useState(initialData || getInitialData());
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [municipiosFiltrados, setMunicipiosFiltrados] = React.useState([]);
+  const [validationErrors, setValidationErrors] = React.useState([]);
   const prevDataRef = React.useRef();
 
   // ===== EFECTOS =====
@@ -167,6 +227,7 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }
   }, [formData?.receptor?.direccion?.departamento]);
 
+  // 🔥 VALIDACIÓN CORREGIDA para Paso 1
   React.useEffect(() => {
     if (onDataChange && isInitialized) {
       const prev = prevDataRef.current;
@@ -174,17 +235,14 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
       
       if (JSON.stringify(prev) !== JSON.stringify(curr)) {
         prevDataRef.current = curr;
-        const isValid = REQUIRED_FIELDS.every(f => !isFieldEmpty(getNestedValue(curr, f)));
-        const missingFields = REQUIRED_FIELDS.filter(f => isFieldEmpty(getNestedValue(curr, f)));
-        const validation = { isValid, missingFields, errors: {} };
-        // Log temporal para depuración
-        console.log('[VALIDACIÓN] isValid:', isValid, 'missingFields:', missingFields, 'valores:', {
-          tipoDte: getNestedValue(curr, 'identificacion.tipoDte'),
-          nombre: getNestedValue(curr, 'receptor.nombre'),
-          tipoDocumento: getNestedValue(curr, 'receptor.tipoDocumento'),
-          numDocumento: getNestedValue(curr, 'receptor.numDocumento'),
-          cuerpoDocumento: getNestedValue(curr, 'cuerpoDocumento')
-        });
+        
+        // 🆕 USAR VALIDACIÓN SIMPLIFICADA PARA PASO 1
+        const validation = validateForStep1(curr);
+        
+        setValidationErrors(validation.missingFields);
+        
+        console.log('[VALIDACIÓN FC PASO 1] isValid:', validation.isValid, 'errors:', validation.missingFields);
+        
         onDataChange(curr, validation);
       }
     }
@@ -211,7 +269,6 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }));
   };
 
-  // Handler para cambios en el receptor (incluyendo municipios)
   const handleReceptorChange = (updatedReceptor) => {
     setFormData(prev => ({
       ...prev,
@@ -219,39 +276,8 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
     }));
   };
 
-  // Handler específico para cambio de departamento
-  const handleDepartamentoChange = (departamentoCode) => {
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        receptor: {
-          ...prev.receptor,
-          direccion: {
-            ...prev.receptor.direccion,
-            departamento: departamentoCode,
-            municipio: "" // Limpiar municipio al cambiar departamento
-          }
-        }
-      };
-      return newData;
-    });
-  };
-
-  // Handler específico para cambio de municipio
-  const handleMunicipioChange = (municipioCode) => {
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        receptor: {
-          ...prev.receptor,
-          direccion: {
-            ...prev.receptor.direccion,
-            municipio: municipioCode
-          }
-        }
-      };
-      return newData;
-    });
+  const handleCuerpoDocumentoChange = (updatedFormData) => {
+    setFormData(updatedFormData);
   };
 
   // ===== RENDER =====
@@ -269,6 +295,21 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
         </div>
       </div>
 
+      {/* Panel de validación */}
+      {validationErrors.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <h4 className="font-medium text-yellow-800">Campos Requeridos Pendientes</h4>
+          </div>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            {validationErrors.map((error, index) => (
+              <li key={index}>• {error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Información del Receptor */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
@@ -278,10 +319,10 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
         <ReceptorForm
           formData={formData.receptor}
           onDataChange={handleReceptorChange}
-          // Puedes agregar aquí otros props como requiredFields, isFieldEmpty, getFieldClassName, etc. si son necesarios
+          requiredFields={REQUIRED_FIELDS}
+          isFieldEmpty={isFieldEmpty}
+          getFieldClassName={getFieldClassName}
         />
-
-        {/* Sección de Dirección Manual - ELIMINADA POR DUPLICIDAD */}
       </div>
 
       {/* Cuerpo del Documento */}
@@ -291,8 +332,8 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
           <h3 className="text-lg font-medium text-gray-900">Productos y Servicios</h3>
         </div>
         <CuerpoDocumento
-          formData={formData || {}}
-          onDataChange={setFormData}
+          formData={formData}
+          onDataChange={handleCuerpoDocumentoChange}
           requiredFields={REQUIRED_FIELDS}
           isFieldEmpty={isFieldEmpty}
           getFieldClassName={getFieldClassName}
@@ -302,17 +343,18 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
           showPrecio={true}
           showDescuento={true}
           showSubtotal={true}
+          tipoDte="01"
           title="Productos/Servicios"
         />
       </div>
 
-      {/* Información Adicional Simplificada */}
+      {/* Configuración del Documento */}
       <div className="mb-8">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Configuración del Documento</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Condición de Operación
+              Condición de Operación <span className="text-red-500">*</span>
             </label>
             <select
               value={formData?.resumen?.condicionOperacion ?? 1}
@@ -321,13 +363,12 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
             >
               <option value={1}>1 - Contado</option>
               <option value={2}>2 - Crédito</option>
-              <option value={3}>3 - Otro</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Moneda
+              Tipo de Moneda <span className="text-red-500">*</span>
             </label>
             <select
               value={formData?.identificacion?.tipoMoneda ?? 'USD'}
@@ -335,27 +376,40 @@ const FacturaConsumidor = ({ onDataChange, initialData }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="USD">USD - Dólar Estadounidense</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="CRC">CRC - Colón Costarricense</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha de Emisión
+              Fecha de Emisión <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={formData?.identificacion?.fecEmi ?? ''}
               onChange={(e) => handleIdentificacionChange('fecEmi', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
             />
           </div>
         </div>
       </div>
 
+      {/* Debug Info (solo en desarrollo) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-medium text-gray-900 mb-2">Debug Info - Factura de Consumidor (Paso 1)</h4>
+          <div className="text-xs text-gray-600 space-y-1">
+            <div>• Items: {formData?.cuerpoDocumento?.length || 0}</div>
+            <div>• Receptor válido: {formData?.receptor?.nombre ? '✅' : '❌'}</div>
+            <div>• Productos válidos: {formData?.cuerpoDocumento?.every(item => item.descripcion && item.cantidad > 0 && item.precioUni > 0) ? '✅' : '❌'}</div>
+            <div>• Total sin IVA: ${((formData?.cuerpoDocumento || []).reduce((total, item) => total + ((item.cantidad * item.precioUni) - item.montoDescu), 0) || 0).toFixed(2)}</div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
+// ===== EXPORTACIÓN EXPLÍCITA =====
 export default FacturaConsumidor;

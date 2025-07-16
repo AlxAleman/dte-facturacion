@@ -15,6 +15,9 @@ const FacturaPreview = React.forwardRef(
       pagina = 1,
       paginasTotales = 1,
       qrValue: qrValueProp,
+      tipoDte = "01",
+      dteInfo = {},
+      calculations = null,
     },
     ref
   ) => {
@@ -78,6 +81,67 @@ const FacturaPreview = React.forwardRef(
 
     console.log('✅ FacturaPreview - Datos válidos, mostrando preview');
 
+    // 🆕 FUNCIÓN HELPER: Mapear campos del receptor correctamente
+    const getReceptorDisplay = (receptor) => {
+      let duiValue = '-';
+      let nitValue = '-';
+      let nrcValue = '-';
+      
+      console.log('🔍 Mapeando receptor:', { 
+        nit: receptor.nit,
+        nrc: receptor.nrc,
+        numDocumento: receptor.numDocumento,
+        tipoDocumento: receptor.tipoDocumento
+      });
+      
+      // 🆕 PRIORIDAD: Usar campos directos del formulario
+      if (receptor.nit) {
+        nitValue = receptor.nit;
+        nrcValue = receptor.nrc || '-';
+      } else if (receptor.numDocumento) {
+        // Fallback: usar numDocumento y tipoDocumento
+        const numDocumento = receptor.numDocumento;
+        const tipoDocumento = receptor.tipoDocumento;
+        
+        switch (tipoDocumento) {
+          case "13": // DUI
+            duiValue = numDocumento;
+            nrcValue = '-'; // DUI no requiere NRC
+            break;
+          case "36": // NIT
+          case "02": // NIT
+          case "37": // NIT
+            nitValue = numDocumento;
+            nrcValue = receptor.nrc || '-'; // NIT requiere NRC
+            break;
+          case "03": // PASAPORTE
+            duiValue = numDocumento;
+            nrcValue = '-'; // Pasaporte no requiere NRC
+            break;
+          default:
+            // Si no está definido el tipo, intentar determinar por formato
+            if (numDocumento.includes('-') && numDocumento.length <= 12) {
+              duiValue = numDocumento; // Formato DUI: 12345678-9
+              nrcValue = '-';
+            } else if (numDocumento.length > 12) {
+              nitValue = numDocumento; // Formato NIT más largo
+              nrcValue = receptor.nrc || '-';
+            } else {
+              duiValue = numDocumento; // Por defecto en DUI
+              nrcValue = '-';
+            }
+        }
+      }
+      
+      console.log('🔍 Receptor mapeado:', { dui: duiValue, nit: nitValue, nrc: nrcValue });
+      
+      return {
+        dui: duiValue,
+        nit: nitValue,
+        nrc: nrcValue
+      };
+    };
+
     // QR
     const qrValue = qrValueProp || (resumen?.codigoGeneracion && resumen?.fechaEmision
       ? `https://admin.factura.gob.sv/consultaPublica?ambiente=00&codGen=${resumen.codigoGeneracion}&fechaEmi=${resumen.fechaEmision}`
@@ -90,44 +154,78 @@ const FacturaPreview = React.forwardRef(
       resumenFecha: resumen?.fechaEmision
     });
 
-    // Cálculos automáticos de totales
-    const sumaVentas = items.reduce((sum, item) => {
-      const precio = item.precioUni || item.precio || 0;
-      const cantidad = item.cantidad || 0;
-      return sum + cantidad * precio;
-    }, 0);
-    const totalDescuento = items.reduce((sum, item) => sum + (item.montoDescu || item.descuento || 0), 0);
-    const subTotal = sumaVentas - totalDescuento;
+    // 🆕 USAR CÁLCULOS DEL PASO 2 SI ESTÁN DISPONIBLES
+    let sumaVentas, totalDescuento, subTotal, sumaGravadas, ivaRetenido, retencionRenta, totalPagar;
+    
+    if (calculations) {
+      // Usar cálculos del paso 2
+      sumaVentas = calculations.subtotal || 0;
+      totalDescuento = calculations.descuentos || 0;
+      subTotal = calculations.subTotalVentas || 0;
+      sumaGravadas = calculations.ventasGravadas || 0;
+      ivaRetenido = calculations.iva || 0;
+      retencionRenta = calculations.reteRenta || 0;
+      totalPagar = calculations.totalPagar || 0;
+      
+      console.log('🔍 FacturaPreview - Usando cálculos del paso 2:', {
+        sumaVentas,
+        totalDescuento,
+        subTotal,
+        sumaGravadas,
+        ivaRetenido,
+        retencionRenta,
+        totalPagar
+      });
+    } else {
+      // Cálculos automáticos de totales (fallback)
+      sumaVentas = items.reduce((sum, item) => {
+        const precio = item.precioUni || item.precio || 0;
+        const cantidad = item.cantidad || 0;
+        return sum + cantidad * precio;
+      }, 0);
+      totalDescuento = items.reduce((sum, item) => sum + (item.montoDescu || item.descuento || 0), 0);
+      subTotal = sumaVentas - totalDescuento;
 
-    // Calcular suma de gravadas (igual que en la tabla)
-    const sumaGravadas = items.reduce((sum, item) => {
-      const precio = item.precioUni || item.precio || 0;
-      const cantidad = item.cantidad || 0;
-      const descuento = item.montoDescu || item.descuento || 0;
-      const totalProducto = cantidad * precio - descuento;
-      let noSujetas = Number(item.noSujetas) || 0;
-      let exentas = Number(item.exentas) || 0;
-      let gravadas = Number(item.gravadas) || 0;
-      if (noSujetas === 0 && exentas === 0 && gravadas === 0) {
-        gravadas = totalProducto;
-      } else if (noSujetas > 0 || exentas > 0) {
-        gravadas = totalProducto - noSujetas - exentas;
-        if (gravadas < 0) gravadas = 0;
+      // Calcular suma de gravadas (igual que en la tabla)
+      sumaGravadas = items.reduce((sum, item) => {
+        const precio = item.precioUni || item.precio || 0;
+        const cantidad = item.cantidad || 0;
+        const descuento = item.montoDescu || item.descuento || 0;
+        const totalProducto = cantidad * precio - descuento;
+        let noSujetas = Number(item.noSujetas) || 0;
+        let exentas = Number(item.exentas) || 0;
+        let gravadas = Number(item.gravadas) || 0;
+        if (noSujetas === 0 && exentas === 0 && gravadas === 0) {
+          gravadas = totalProducto;
+        } else if (noSujetas > 0 || exentas > 0) {
+          gravadas = totalProducto - noSujetas - exentas;
+          if (gravadas < 0) gravadas = 0;
+        }
+        return sum + gravadas;
+      }, 0);
+
+      // IVA automático 13% sobre gravadas
+      ivaRetenido = +(sumaGravadas * 0.13).toFixed(2);
+      // Retención de renta: si viene en infoAdicional o firmas, usarlo, si no, 0
+      retencionRenta = 0;
+      if (resumen && resumen.retencionRenta) {
+        retencionRenta = Number(resumen.retencionRenta) || 0;
+      } else if (infoAdicional && infoAdicional.retencionRenta) {
+        retencionRenta = Number(infoAdicional.retencionRenta) || 0;
       }
-      return sum + gravadas;
-    }, 0);
-
-    // IVA automático 13% sobre gravadas
-    const ivaRetenido = +(sumaGravadas * 0.13).toFixed(2);
-    // Retención de renta: si viene en infoAdicional o firmas, usarlo, si no, 0
-    let retencionRenta = 0;
-    if (resumen && resumen.retencionRenta) {
-      retencionRenta = Number(resumen.retencionRenta) || 0;
-    } else if (infoAdicional && infoAdicional.retencionRenta) {
-      retencionRenta = Number(infoAdicional.retencionRenta) || 0;
+      // Total a pagar
+      totalPagar = subTotal + ivaRetenido + retencionRenta;
+      
+      console.log('🔍 FacturaPreview - Usando cálculos automáticos (fallback):', {
+        sumaVentas,
+        totalDescuento,
+        subTotal,
+        sumaGravadas,
+        ivaRetenido,
+        retencionRenta,
+        totalPagar
+      });
     }
-    // Total a pagar
-    const totalPagar = subTotal + ivaRetenido + retencionRenta;
 
     // Filas vacías para mantener formato
     const emptyRows = [];
@@ -147,6 +245,9 @@ const FacturaPreview = React.forwardRef(
       }
       return 'Sin dirección';
     };
+
+    // 🆕 Obtener datos del receptor mapeados
+    const receptorDisplay = getReceptorDisplay(receptor);
 
     return (
       <div
@@ -176,8 +277,19 @@ const FacturaPreview = React.forwardRef(
             <div style={{ textAlign: "center", flex: "1" }}>
               <div style={{ fontWeight: "bold", fontSize: "16px", lineHeight: "1.2" }}>
                 DOCUMENTO TRIBUTARIO ELECTRÓNICO<br />
-                FACTURA
+                {tipoDte === "01" ? "FACTURA DE CONSUMIDOR FINAL" : 
+                 tipoDte === "03" ? "COMPROBANTE DE CRÉDITO FISCAL" :
+                 tipoDte === "14" ? "FACTURA DE SUJETO EXCLUIDO" :
+                 tipoDte === "11" ? "FACTURA DE EXPORTACIÓN" :
+                 tipoDte === "05" ? "NOTA DE CRÉDITO" :
+                 tipoDte === "06" ? "NOTA DE DÉBITO" :
+                 "FACTURA"}
               </div>
+              {dteInfo?.name && (
+                <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                  Tipo {tipoDte} - {dteInfo.name}
+                </div>
+              )}
             </div>
             <div style={{ textAlign: "right", width: "120px" }}>
               <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "10px" }}>
@@ -224,9 +336,10 @@ const FacturaPreview = React.forwardRef(
             <div style={{ padding: "8px" }}>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Nombre:</span> {receptor.nombre}</div>
               <div style={{ display: "flex", gap: "16px", marginBottom: "4px" }}>
-                <div><span style={{ fontWeight: "bold" }}>NIT:</span> {receptor.nit || '-'}</div>
-                <div><span style={{ fontWeight: "bold" }}>NRC:</span> {receptor.nrc || '-'}</div>
-                <div><span style={{ fontWeight: "bold" }}>DUI:</span> {receptor.dui || '-'}</div>
+                {/* 🔥 CORREGIDO: Usar función helper para mapear correctamente */}
+                <div><span style={{ fontWeight: "bold" }}>NIT:</span> {receptorDisplay.nit}</div>
+                <div><span style={{ fontWeight: "bold" }}>NRC:</span> {receptorDisplay.nrc}</div>
+                <div><span style={{ fontWeight: "bold" }}>DUI:</span> {receptorDisplay.dui}</div>
               </div>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Actividad económica:</span> {receptor.actividad || receptor.descActividad}</div>
               <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: "bold" }}>Dirección:</span> {formatDireccion(receptor.direccion)}</div>

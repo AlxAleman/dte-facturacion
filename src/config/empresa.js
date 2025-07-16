@@ -3,18 +3,18 @@
 
 export const EMPRESA_CONFIG = {
   // 🏢 DATOS PRINCIPALES DE LA EMPRESA
-  nombre: "Mi Empresa S.A. de C.V.",
-  nit: "0614-123456-789-0",
-  nombreComercial: "Mi Empresa",
-  descActividad: "Comercio al por mayor y menor de productos diversos",
+  nombre: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
+  nit: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
+  nombreComercial: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
+  descActividad: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
   
   // 📍 INFORMACIÓN DE CONTACTO
-  direccion: "Calle Principal #123, Colonia Centro, San Salvador",
-  telefono: "+503 2222-3333",
-  correo: "facturacion@miempresa.com",
+  direccion: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
+  telefono: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
+  correo: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
   
   // 🏛️ INFORMACIÓN TRIBUTARIA
-  nrc: "123456",
+  nrc: "", // 🔥 CORREGIDO: Debe ser configurado por el usuario
   
   // 🎨 CONFIGURACIÓN VISUAL (opcional)
   logo: "/logo.png", // Ruta al logo de la empresa

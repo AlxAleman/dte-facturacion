@@ -159,16 +159,20 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
     console.log('🔄 Cambiando tipo de DTE de', selectedTipoDte, 'a', newTipoDte);
     setSelectedTipoDte(newTipoDte);
     
-    // Crear datos iniciales para el nuevo tipo de DTE
+    // 🔥 CORREGIDO: Preservar datos existentes al cambiar tipo de DTE
+    const currentData = formData || {};
     const initialDataWithTipoDte = {
+      // Preservar datos existentes
+      ...currentData,
+      // Solo actualizar el tipo de DTE
       identificacion: {
-        tipoDte: newTipoDte,
-        // Puedes agregar aquí otros campos de identificacion si lo requieren los formularios
+        ...currentData.identificacion,
+        tipoDte: newTipoDte
       },
-      condicionOperacion: '',
-      emisor: {},
-      receptor: {},
-      cuerpoDocumento: [
+      // Preservar campos que no dependen del tipo de DTE
+      emisor: currentData.emisor || {},
+      receptor: currentData.receptor || {},
+      cuerpoDocumento: currentData.cuerpoDocumento || [
         {
           numItem: 1,
           codigo: "",
@@ -178,7 +182,7 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
           montoDescu: 0
         }
       ],
-      resumen: {},
+      resumen: currentData.resumen || {},
       
       // Propiedades específicas para NotaRemision (Tipo 04)
       documentoRelacionado: [],
@@ -284,6 +288,14 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
       };
     }
     
+    console.log('📝 Datos del formulario actualizados:', {
+      tipoDte: dataToUse?.identificacion?.tipoDte,
+      secciones: Object.keys(dataToUse || {}),
+      receptor: dataToUse?.receptor?.nombre ? '✅ Completado' : '❌ Faltante',
+      emisor: dataToUse?.emisor?.nombre ? '✅ Completado' : '❌ Faltante',
+      items: dataToUse?.cuerpoDocumento?.length || 0
+    });
+    
     setFormData(dataToUse);
     
     if (validation) {
@@ -298,11 +310,16 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
 
   // Efecto para manejar datos iniciales
   useEffect(() => {
-    if (initialData) {
+    if (initialData && !formData) {
+      // 🔥 CORREGIDO: Solo inicializar una vez cuando no hay datos existentes
+      console.log('🔄 Inicializando datos del formulario:', {
+        tipoDte: initialData.identificacion?.tipoDte,
+        secciones: Object.keys(initialData || {})
+      });
       setFormData(initialData);
       setSelectedTipoDte(initialData.identificacion?.tipoDte || "01");
     }
-  }, [initialData]);
+  }, [initialData]); // Removido formData de las dependencias para evitar re-inicialización
 
   // Efecto para manejar cambios en el tipo de DTE inicial - ELIMINADO porque causa problemas
   // useEffect(() => {
@@ -384,7 +401,7 @@ const DteFormContainer = ({ onDataChange, initialData, tipoDte = "01" }) => {
 
       {/* Renderizar el componente específico del tipo de DTE */}
       <DteComponent
-        key={`dte-${selectedTipoDte}`}
+        key={`dte-${selectedTipoDte}-${formData ? 'with-data' : 'empty'}`}
         onDataChange={handleFormDataChange}
         initialData={formData}
       />

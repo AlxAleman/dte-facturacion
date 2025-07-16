@@ -101,13 +101,16 @@ const ReceptorForm = ({
 
     // Auto-completar campos del receptor basado en tipo de documento
     if (field === 'tipoDocumento') {
-      // Si es DUI, limpiar NRC automáticamente
-      if (value === '13') {
+      // 🔥 CORREGIDO: Lógica mejorada para NRC según tipo de documento
+      if (value === '13' || value === '03') {
+        // DUI y Pasaporte: NRC no aplica
         updatedReceptor.nrc = null;
-      }
-      // Si es NIT, establecer NRC vacío para que el usuario lo complete
-      else if (value === '36') {
-        updatedReceptor.nrc = '';
+      } else if (value === '36' || value === '02' || value === '37') {
+        // NIT y otros: NRC es obligatorio
+        updatedReceptor.nrc = updatedReceptor.nrc || '';
+      } else {
+        // Para cualquier otro tipo, limpiar NRC
+        updatedReceptor.nrc = null;
       }
     }
 
@@ -225,6 +228,7 @@ const ReceptorForm = ({
             className={getFieldClassName ? getFieldClassName('receptor.tipoDocumento') : "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"}
             required={requiredFields.includes('receptor.tipoDocumento')}
           >
+            <option value="">Seleccione tipo de documento</option>
             {CATALOGS.TIPOS_DOCUMENTO_IDENTIFICACION.map(tipo => (
               <option key={tipo.codigo} value={tipo.codigo}>
                 {tipo.codigo} - {tipo.valor}

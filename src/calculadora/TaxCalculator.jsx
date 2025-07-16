@@ -11,6 +11,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const userChangedRetencion = useRef(false);
+  const lastCalculationRef = useRef(null);
 
   // Hook multi-DTE
   const {
@@ -56,10 +57,25 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
   // Calcular automáticamente cuando cambien los datos relevantes
   useEffect(() => {
     if (items && items.length > 0) {
-      performCalculation();
+      // 🔥 CORREGIDO: Evitar bucle infinito usando useRef para comparar
+      const currentData = JSON.stringify({
+        items: items.map(item => ({
+          cantidad: item.cantidad,
+          precioUni: item.precioUni,
+          montoDescu: item.montoDescu
+        })),
+        subtotal,
+        descuentos,
+        aplicarRetencion,
+        tipoDte
+      });
+      
+      if (lastCalculationRef.current !== currentData) {
+        lastCalculationRef.current = currentData;
+        performCalculation();
+      }
     }
-    // eslint-disable-next-line
-  }, [items, descuentoGlobal, aplicarRetencion, tipoDte]);
+  }, [items, subtotal, descuentos, aplicarRetencion, tipoDte]);
 
   // Función de cálculo principal
   const performCalculation = useCallback(() => {
@@ -87,7 +103,7 @@ const TaxCalculator = ({ items = [], tipoDte = "01", onCalculationChange }) => {
     } finally {
       setIsCalculating(false);
     }
-  }, [items, subtotal, descuentos, aplicarRetencion, tipoDte, calculate, onCalculationChange]);
+  }, [items, subtotal, descuentos, aplicarRetencion, tipoDte, calculate]);
 
   const handleDescuentoChange = (value) => {
     const descuento = Math.max(0, parseFloat(value) || 0);
